@@ -45,7 +45,7 @@
     
     
     <entry>
-      <title>music</title>
+      <title>音乐</title>
       <link href="/music/index.html"/>
       <url>/music/index.html</url>
       
@@ -67,7 +67,7 @@
     
     
     <entry>
-      <title>about</title>
+      <title>关于</title>
       <link href="/about/index.html"/>
       <url>/about/index.html</url>
       
@@ -78,7 +78,7 @@
     
     
     <entry>
-      <title>books</title>
+      <title>书籍</title>
       <link href="/books/index.html"/>
       <url>/books/index.html</url>
       
