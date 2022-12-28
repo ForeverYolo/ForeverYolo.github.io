@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>何为从代码看Logisim?</title>
+      <link href="/2022/12/28/%E4%BD%95%E4%B8%BA%E4%BB%8E%E4%BB%A3%E7%A0%81%E7%9C%8BLogisim/"/>
+      <url>/2022/12/28/%E4%BD%95%E4%B8%BA%E4%BB%8E%E4%BB%A3%E7%A0%81%E7%9C%8BLogisim/</url>
+      
+        <content type="html"><![CDATA[<h1 id="何为从代码看Logisim"><a href="#何为从代码看Logisim" class="headerlink" title="何为从代码看Logisim?"></a>何为从代码看Logisim?</h1><p>• MIPS中对于递归可以直接翻译C代码，那么Logisim是否可以？这就是这个问题的来源：<br>• 从代码看Logisim，即类比程设思想解决logisim问题，那么如何类比？如何解决？我想引用组合电路一种类型题——投票类型问题对其做出解释，方便大家理解，并提供解决投票问题普通投票部分的一个可行思路。当然这里我只谈思路，不谈实现，小小的抛砖引玉一波，具体怎么应用就看大家了。 </p><h1 id="Example-1-补码解决投票问题"><a href="#Example-1-补码解决投票问题" class="headerlink" title="Example 1 补码解决投票问题"></a>Example 1 补码解决投票问题</h1><h2 id="题面及分析"><a href="#题面及分析" class="headerlink" title="题面及分析"></a>题面及分析</h2><p>这是一道考试真题，大概意思是说有几个人进行投票，统计票数，要求通过输出1，不通过则输出0，这其实是一类问题，因为有时候大家权重一样进行投票，有时候大家权重不一样进行投票（一票否决），这都是会可能出的题。<br>听起来很简单的样子，但实现上其实是有一定难度的。主要难度体现在对于如何判断是否通过的输出上。下面我们谈一谈我当初的解法：    </p><h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><p>•在初看投票类型题前，如果用C的想法去解这种题该怎么解? 主体思路便是：同意为1，弃权为0，反对为-1. 加起来看是否大于0就可以了。那么既然C可以这样实现,C归根结底是在电路上运行的，那么为什么不可以尝试转化为logisim呢？<br>•有了这样的想法，首先要解决的就是加法问题，借助一点对计算机知识的了解，我们知道计算机中加法是按补码运算的，那么我们加法器有了，我们只需解决补码部分就可以。<br>•假设投票人数有7个，那么考虑到最多7人同意，7人反对，那么值的范围就在-7~7之间，所以我们可选用4位数字位+1位符号位来表示（大于5位都可 不溢出就行）,同意则为00001,弃权则为00000，反对则为11111。蛤？你补码忘记了？<font color=red>计组pre进制介绍解君愁（笑）</font><br>•但其实logisim自带了补码器，不记得的话就去手动试试<br><img src="https://s1.ax1x.com/2022/12/28/pSSpAit.png" alt="何为从代码看Logisim-1"><br>•加法问题解决~<br>•最后我们只需要把每个人的数据相加即可，用比较器和0判断一下即可，切记别习惯性点成无符号了！<br><img src="https://s1.ax1x.com/2022/12/28/pSS9ClT.png" alt="何为从代码看Logisim-6">    </p><h1 id="Example-2-从C中if和Switch到logisim"><a href="#Example-2-从C中if和Switch到logisim" class="headerlink" title="Example 2 从C中if和Switch到logisim"></a>Example 2 从C中if和Switch到logisim</h1><p>•写C最离不开的就是if语句，现在我们实现加法之后也遇到了一个问题，怎么判断输入的数据是同意，弃权，还是反对？这显然是一个switch语句，我们可以借助MUX实现:<br><img src="https://s1.ax1x.com/2022/12/28/pSSpFII.png" alt="何为从代码看Logisim-2"><br>•if的实现：如图，比较器便是if的条件判断部分，比较器的结果作用于MUX使其实现if else 功能<br><img src="https://s1.ax1x.com/2022/12/28/pSSpidA.png" alt="何为从代码看Logisim-3"><br>•体现在投票问题当中就是最后和零的判断部分：if(结果&gt;0)执行1 else执行0<br><img src="https://s1.ax1x.com/2022/12/28/pSSpPZd.png" alt="何为从代码看Logisim-4"><br>•回到例子，现在判断的问题也已经解决，我们可以顺利的从输入当中得到我们想要的信息进行运算了！离主体实现只有一步之遥。  </p><h1 id="Example-3-从C中for到logisim"><a href="#Example-3-从C中for到logisim" class="headerlink" title="Example 3 从C中for到logisim"></a>Example 3 从C中for到logisim</h1><p>•这一部分，理论上可以用计数器来实现，设置stay at value. 外加比较器相等时freeze(跳出循环）但考虑到其实logisim并没有很复杂的循环，建议果断选择Ctrl C + Ctrl V<br>•于是经过对于n个投票人的Ctrl C和Ctrl V，以及前面的一系列工作，我们得到最终主体电路，放在C中 就是 Switch 和 C的加法运算 和 if的结合 （电路自行实现~)</p><h1 id="Example-4-从C中多条件判断到Logisim"><a href="#Example-4-从C中多条件判断到Logisim" class="headerlink" title="Example 4 从C中多条件判断到Logisim"></a>Example 4 从C中多条件判断到Logisim</h1><p>•实际过程中，if往往有多个条件，那么如何解决这个问题？其实C已经给了答案&amp;或者|对应与门或者或门，这样我们也可以完成多条件判断了.<br><img src="https://s1.ax1x.com/2022/12/28/pSSpEJP.png" alt="何为从代码看Logisim-5"><br>•Tips:对于特殊投票人的特判就是这样实现的~（提供一个思路，实现就交给大家自行完成了）      </p><h1 id="Example-5-其余C语句实现"><a href="#Example-5-其余C语句实现" class="headerlink" title="Example 5 其余C语句实现"></a>Example 5 其余C语句实现</h1><p>•根据代码意思转换普通电路即可~</p><h1 id="END"><a href="#END" class="headerlink" title="END"></a>END</h1><p>•到现在为止，C语言有的语法我们都可以借助Logisim实现，那么对于一道组合逻辑题若是实在没有思路，我们可以思考怎么用C怎么实现，进而一步步转化为Logisim电路。此法名为：翻译 （默念翻译大法好） </p><h1 id="True-END"><a href="#True-END" class="headerlink" title="True END"></a>True END</h1>]]></content>
+      
+      
+      <categories>
+          
+          <category> 北航计算机组成 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 北航计算机组成 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>page</title>
       <link href="/2022/12/27/page/"/>
       <url>/2022/12/27/page/</url>
@@ -56,28 +81,6 @@
     
     
     <entry>
-      <title>archives</title>
-      <link href="/archives/index.html"/>
-      <url>/archives/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>音乐</title>
-      <link href="/music/index.html"/>
-      <url>/music/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>关于</title>
       <link href="/about/index.html"/>
       <url>/about/index.html</url>
@@ -100,9 +103,9 @@
     
     
     <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -111,9 +114,31 @@
     
     
     <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
+      <title>音乐</title>
+      <link href="/music/index.html"/>
+      <url>/music/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>archives</title>
+      <link href="/archives/index.html"/>
+      <url>/archives/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
