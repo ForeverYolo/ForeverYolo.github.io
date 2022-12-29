@@ -1,6 +1,6 @@
 // 动态心跳，更改自己的名称
 $(document).ready(function(e){
-    $('.copyright').html('<font style=color:#1E90FF>©2022 <i class="fa-fw fas fa-heartbeat card-announcement-animation cc_pointer"></i> By <font style=color:#FF00FF>ForverYolo');
+    $('.copyright').html('<font style=color:#1E90FF>©2022 <i class="fa-fw fas fa-heartbeat card-announcement-animation cc_pointer"></i> By <font style=color:#FF00FF>ForeverYolo');
 })
 
 $(document).ready(function(e){
