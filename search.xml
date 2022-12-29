@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title>成熟的孩子要自己找题做——获取CSCore白金版</title>
+      <link href="/2022/12/29/%E6%88%90%E7%86%9F%E7%9A%84%E5%AD%A9%E5%AD%90%E8%A6%81%E8%87%AA%E5%B7%B1%E6%89%BE%E9%A2%98%E5%81%9A%E2%80%94%E2%80%94%E8%8E%B7%E5%8F%96CSCORE%E7%99%BD%E9%87%91%E7%89%88/"/>
+      <url>/2022/12/29/%E6%88%90%E7%86%9F%E7%9A%84%E5%AD%A9%E5%AD%90%E8%A6%81%E8%87%AA%E5%B7%B1%E6%89%BE%E9%A2%98%E5%81%9A%E2%80%94%E2%80%94%E8%8E%B7%E5%8F%96CSCORE%E7%99%BD%E9%87%91%E7%89%88/</url>
+      
+        <content type="html"><![CDATA[<p><strong><font size = 5>这是一篇针对CSCore的Selenium学习</font></strong>  </p><h2 id="历史背景"><a href="#历史背景" class="headerlink" title="历史背景"></a>历史背景</h2><p>在北航，有这样一群人，他享有着别人所羡慕不来的东西——<font color=purple>白金版CSCore</font>,他可以查看自己的统计图，看到自己学习的时长与成果；他可以被计组邮箱推题，评测别人看不到的题。<br>我们至今未能得知白金版CSCore的来源，或许正如助教所说，这是未开发功能，只供部分人试用，又或许这是来自计组平台对于不好好做Pre的小可爱的一种Push,我们不得而知。<br>笔者很不幸运，便是普通版的一员，即使拿到了统计图的网址，点进去也会被骗到BiliBili的《never gonna give you up》。<br>然而我们是成年人了，要学会自己去获取资源，要有自己去拿到<font color=red>王者版CSCore</font>的决心与努力，因此，我们就要学习WEB自动化工具——<strong>Selenium</strong><br>当然，不学习也可以，它毕竟只是一个<strong>自动化软件</strong>，选择用勤劳的双手创造财富也可以，再不济，笔者也为大家提供了<a href="https://www.bilibili.com/video/av156766/">亡灵版CSCore</a>,点击直接使用即可~<br><img src="https://s1.ax1x.com/2022/12/29/pSSDc34.png" alt="白金版CSCore">         </p><h2 id="Selenium安装"><a href="#Selenium安装" class="headerlink" title="Selenium安装"></a>Selenium安装</h2><p>Selenium是Python的一个工具包，所以我们需要先有Python，这里笔者推荐在安装解释器时直接使用<a href="https://anaconda.org.cn/">Anaconda</a>,其为Python的集成包，集成了Python及Python主流的工具包（库）多达1500个，让你可以开始你的Python编程。<br>如果你安装了Anaconda，那么大概率Anaconda中是有Selenium的，直接使用即可。<br>如果你只是安装了Python,那么大概率你是没有Selenium的，这时候需要在控制台输入以下指令：</p><figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install selenium</span><br></pre></td></tr></table></figure><p>如果报错，请检查Python安装的正确性。</p><h2 id="浏览器驱动安装"><a href="#浏览器驱动安装" class="headerlink" title="浏览器驱动安装"></a>浏览器驱动安装</h2><p>既然Selenium是WEB自动化工具，那么我们自然需要给浏览器安装驱动程序让Python可以驱动浏览器干活，这里针对<font color=green>不同</font>的<font color=blue>浏览器</font>我们要安装不同的驱动，针对<font color=green>不同</font>的<font color=blue>浏览器</font>版本也要选择安装不同的版本。<br><strong>Firefox浏览器驱动：</strong><a href="https://github.com/mozilla/geckodriver/releases">geckodriver</a><br><strong>Chrome浏览器驱动：</strong><a href="https://sites.google.com/a/chromium.org/chromedriver/home">chromedriver</a><br><strong>Edge浏览器驱动：</strong><a href="https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/">MicrosoftWebDriver</a><br>拿<strong>Microsoft Edge</strong>举例，点击设置中的关于Microsoft Edge，我们可以看到Microsoft Edge的版本号：<br><img src="https://s1.ax1x.com/2022/12/29/pSSsESe.png" alt="Edge版本号"><br>发现开头的是108，所以我们去官网选择开头为108的驱动进行下载，后面不一样问题不大。<br><img src="https://s1.ax1x.com/2022/12/29/pSSsVQH.png" alt="Edge驱动"> </p><h2 id="正式编写针对于CSCore的代码"><a href="#正式编写针对于CSCore的代码" class="headerlink" title="正式编写针对于CSCore的代码"></a>正式编写针对于CSCore的代码</h2><h3 id="CSCore网址分析"><a href="#CSCore网址分析" class="headerlink" title="CSCore网址分析"></a>CSCore网址分析</h3><p>以上面的那道题为例，我们贴出网址如下： </p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://cscore.buaa.edu.cn/#/problem?ProblemId=336&amp;PieId=896</span><br></pre></td></tr></table></figure> <p>分析看出,如果用小区做例子的话，PieId就是居民楼，ProblemId就是每一住户，我们遍历搜索每一居民楼，每一住户，问问家里是否有人（题目），便可以得到所有的隐藏题目，直升<font color = red>王者版CSCore</font>,问题来了：<br>0.Selenium让我望而却步，我<strong>不能接受</strong>。<br>1.手动改网址需要1000x1000&#x3D;10^6次，我们<strong>不能接受</strong>。<br>2.肉眼观察每一户是否有人住（有题），我们<strong>不能接受</strong>。</p><h3 id="针对CSCore编写Selenium"><a href="#针对CSCore编写Selenium" class="headerlink" title="针对CSCore编写Selenium"></a>针对CSCore编写Selenium</h3><h4 id="Solution-Zero"><a href="#Solution-Zero" class="headerlink" title="Solution Zero"></a>Solution Zero</h4><p><strong>万事开头难，其实Selenium归根结底只是Python的一个库函数，学会则极其简单。</strong><br>我们首先进行初步的设置：</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">edge_options = Options()</span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--headless&#x27;</span>) <span class="comment"># 使用无头模式</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--disable-gpu&#x27;</span>) <span class="comment"># 禁用GPU，防止无头模式出现莫名的BUG</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;window-size=1920x1080&#x27;</span>) <span class="comment">#设置为电脑显示分辨率大小</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--start-maximized&#x27;</span>) <span class="comment">#全屏展开浏览器</span></span><br><span class="line"><span class="comment">#以上都是对于Edge的设置，若用其他浏览器同理。</span></span><br><span class="line"><span class="comment"># 开启开发者模式</span></span><br><span class="line">edge_options.add_experimental_option(<span class="string">&#x27;excludeSwitches&#x27;</span>, [<span class="string">&#x27;enable-automation&#x27;</span>])</span><br><span class="line"><span class="comment"># 禁用启用Blink运行时的功能</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--disable-blink-features=AutomationControlled&#x27;</span>)</span><br><span class="line"><span class="comment"># 打开Edge</span></span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&quot;exercise.txt&quot;</span>, <span class="string">&quot;w&quot;</span>)</span><br><span class="line">driver = webdriver.Edge(options=edge_options)</span><br><span class="line">driver.maximize_window()  <span class="comment"># 窗口最大化</span></span><br><span class="line">driver.implicitly_wait(<span class="number">10</span>)  <span class="comment"># 隐式等待10s查询元素</span></span><br><span class="line"><span class="comment">#以上是操作Edge驱动的基本过程</span></span><br></pre></td></tr></table></figure> <p><strong>强调：</strong> 无头模式运行时不会将浏览器显示出来，所以如果你想观看自动化过程，请注释掉使用无头模式这条语句。</p><h4 id="Solution-First"><a href="#Solution-First" class="headerlink" title="Solution First"></a>Solution First</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1000</span>):</span><br><span class="line">    web = <span class="string">&quot;http://cscore.buaa.edu.cn/#/problem?ProblemId=&quot;</span> + <span class="built_in">str</span>(i) + <span class="string">&quot;&amp;PieId=896&quot;</span></span><br><span class="line">    driver.get(<span class="string">&quot;http://cscore.buaa.edu.cn/#/problem?ProblemId=&quot;</span> + <span class="built_in">str</span>(i) + <span class="string">&quot;&amp;PieId=896&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> i == <span class="number">0</span>:</span><br><span class="line">        driver.find_element(By.XPATH,</span><br><span class="line">                            <span class="string">&quot;/html/body/div/div/div[1]/div/main/div/div[1]/div/div/div/div[1]/form/div[1]/div/div[1]/div[1]/input&quot;</span>).send_keys(</span><br><span class="line">            <span class="string">&quot;xxx&quot;</span>)   <span class="comment"># 输入账号</span></span><br><span class="line">        driver.find_element(By.XPATH,</span><br><span class="line">                            <span class="string">&quot;/html/body/div/div/div[1]/div/main/div/div[1]/div/div/div/div[1]/form/div[2]/div/div[1]/div[1]/input&quot;</span>).send_keys(</span><br><span class="line">            <span class="string">&quot;XXXX&quot;</span>)  <span class="comment"># 输入密码</span></span><br><span class="line">        driver.find_element(By.XPATH,</span><br><span class="line">                            <span class="string">&#x27;/html/body/div/div/div[1]/div/main/div/div[1]/div/div/div/div[3]/button/span&#x27;</span>).click()</span><br></pre></td></tr></table></figure> <p>看不懂没关系，我们慢慢解释：<br>第一行是for循环标准语句，我们需要敲响1000户的们，所以范围是1000.<br>第二行是定义了个变量用来存放网址，用于后面搜到题我们往文档里写入网址。<br>第三行是Selenium功能，利用驱动打开该网址，中间str(i)对应户，我们遍历查找896号居民楼。<br>第四行到第十二行是一个特判：第一次进入CSCore,我们自然会需要登陆，这时候利用Selenium功能，捕捉元素(find_element)捕捉到登陆框，利用Selenium功能(send_keys)将“xxx”自动输入进去。之后利用Selenium功能，模拟点击(click)点击登陆，进入计组平台。之后便是<font color = blue>天高任鸟飞，海阔凭鱼跃了</font>。<br><font size = 5><font color = red>TIPS：</font></font>Selenium有很多定位元素的方法:</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">find_element_by_id()</span><br><span class="line">find_element_by_name()</span><br><span class="line">find_element_by_class_name()</span><br><span class="line">find_element_by_tag_name()</span><br><span class="line">find_element_by_link_text()</span><br><span class="line">find_element_by_partial_link_text()</span><br><span class="line">find_element_by_xpath()</span><br><span class="line">find_element_by_css_selector()</span><br></pre></td></tr></table></figure> <p>我们采用最简单准确度高的操作，Xpath定位，毕竟我们是来学计组的，够用就行。   </p><h5 id="Xpath定位法"><a href="#Xpath定位法" class="headerlink" title="Xpath定位法"></a>Xpath定位法</h5><p>打开浏览器，F12进入开发者模式，出现如图所示画面，选择元素。<br><img src="https://s1.ax1x.com/2022/12/29/pSShBhn.png" alt="XPath定位1"><br>之后我们将鼠标移到每一行上面，会发现该行元素作用的范围将会以蓝色显示出来。<br><img src="https://s1.ax1x.com/2022/12/29/pSS4iDS.png" alt="XPath定位2"><br>如图，右侧浅蓝色为我<font color = blue>鼠标停留位置</font>，左侧为定位到的<font color = blue>元素</font>，我们以CSCore的密码为例。<br>之后我们点击右键，按照下图所示复制出完整的XPath路径，<font size = 5><font color = red>一定要完整！否则定位大概率失效！</font></font><br><img src="https://s1.ax1x.com/2022/12/29/pSS4QDU.png" alt="XPath定位3">   </p><h4 id="Solution-Second"><a href="#Solution-Second" class="headerlink" title="Solution Second"></a>Solution Second</h4><p>之后我们解决第二个问题:自动判断，那么我们如何才能实现自动判断？道理也很简单，我们只需要找出没有搜到题和搜到题的不同点即可，搜到题，会出现题目，没有搜到题，则是空白界面，所以我们只需要定位一个题目任意的元素，每次判断该元素是否出现，即可实现这个功能，代码如下： </p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    info = driver.find_element(By.XPATH, <span class="string">&#x27;/html/body/div/div[1]/div[1]/div/main/div/div/div/div[1]/h2&#x27;</span>).text</span><br><span class="line"><span class="keyword">except</span>:</span><br><span class="line">    <span class="literal">None</span></span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="keyword">if</span> info:</span><br><span class="line">        f.write(web) <span class="comment">#找到就将Web里的网址写入文件中</span></span><br><span class="line">        f.write(<span class="string">&quot;\n&quot;</span>) <span class="comment">#换行</span></span><br></pre></td></tr></table></figure>  <p><font size = 5><font color = red>TIPS：</font></font><br>如果我们只想搜编程题，则考虑搜索编程题特有的提交题目那个框。<br>如果我们全都要，那么考虑搜索题目这个元素即可。          </p><h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p><img src="https://s1.ax1x.com/2022/12/29/pSS4HGn.png" alt="结果展示"> </p><p>至此，我们完成了Selenium针对计组的学习，之后我们想实现其他的功能按照上面类似操作即可，不记得对应的语句就去百度一下。<br>如果你真的这样做了，那么恭喜你的P0-P2将一帆风顺，因为你做到了许许多多的往年考题，还有自动评测。<br><strong><font size = 4><font color = purple>恭喜获得王者版CSCore</font></font></strong>  </p><h2 id="完整源代码放送"><a href="#完整源代码放送" class="headerlink" title="完整源代码放送"></a>完整源代码放送</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">  </span><br><span class="line"><span class="keyword">import</span> selenium</span><br><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.edge.options <span class="keyword">import</span> Options</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.support.ui <span class="keyword">import</span> Select</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.common.by <span class="keyword">import</span> By</span><br><span class="line"><span class="keyword">from</span> selenium.common.exceptions <span class="keyword">import</span> NoSuchElementException</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">edge_options = Options()</span><br><span class="line"><span class="comment"># 使用无头模式</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--headless&#x27;</span>)</span><br><span class="line"><span class="comment"># 禁用GPU，防止无头模式出现莫名的BUG</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--disable-gpu&#x27;</span>)</span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;window-size=1920x1080&#x27;</span>)</span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--start-maximized&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 开启开发者模式</span></span><br><span class="line">edge_options.add_experimental_option(<span class="string">&#x27;excludeSwitches&#x27;</span>, [<span class="string">&#x27;enable-automation&#x27;</span>])</span><br><span class="line"><span class="comment"># 禁用启用Blink运行时的功能</span></span><br><span class="line">edge_options.add_argument(<span class="string">&#x27;--disable-blink-features=AutomationControlled&#x27;</span>)</span><br><span class="line"><span class="comment"># 打开Edge</span></span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&quot;exercise.txt&quot;</span>, <span class="string">&quot;w&quot;</span>)</span><br><span class="line">driver = webdriver.Edge(options=edge_options)</span><br><span class="line">driver.maximize_window()  <span class="comment"># 窗口最大化</span></span><br><span class="line">driver.implicitly_wait(<span class="number">10</span>)  <span class="comment"># 隐式等待10s查询元素</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1000</span>):</span><br><span class="line">    web = <span class="string">&quot;http://cscore.buaa.edu.cn/#/problem?ProblemId=&quot;</span> + <span class="built_in">str</span>(i) + <span class="string">&quot;&amp;PieId=896&quot;</span></span><br><span class="line">    driver.get(<span class="string">&quot;http://cscore.buaa.edu.cn/#/problem?ProblemId=&quot;</span> + <span class="built_in">str</span>(i) + <span class="string">&quot;&amp;PieId=896&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> i == <span class="number">0</span>:</span><br><span class="line">        driver.find_element(By.XPATH,</span><br><span class="line">                            <span class="string">&quot;/html/body/div/div/div[1]/div/main/div/div[1]/div/div/div/div[1]/form/div[1]/div/div[1]/div[1]/input&quot;</span>).send_keys(</span><br><span class="line">            <span class="string">&quot;xxx&quot;</span>)   <span class="comment"># 输入账号</span></span><br><span class="line">        driver.find_element(By.XPATH,</span><br><span class="line">                            <span class="string">&quot;/html/body/div/div/div[1]/div/main/div/div[1]/div/div/div/div[1]/form/div[2]/div/div[1]/div[1]/input&quot;</span>).send_keys(</span><br><span class="line">            <span class="string">&quot;XXXX&quot;</span>)  <span class="comment"># 输入密码</span></span><br><span class="line">        driver.find_element(By.XPATH,</span><br><span class="line">                            <span class="string">&#x27;/html/body/div/div/div[1]/div/main/div/div[1]/div/div/div/div[3]/button/span&#x27;</span>).click()</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        info = driver.find_element(By.XPATH, <span class="string">&#x27;/html/body/div/div[1]/div[1]/div/main/div/div/div/div[1]/h2&#x27;</span>).text</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="literal">None</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">if</span> info:</span><br><span class="line">            f.write(web)</span><br><span class="line">            f.write(<span class="string">&quot;\n&quot;</span>)</span><br><span class="line">f.close()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Done&quot;</span>)</span><br></pre></td></tr></table></figure> ]]></content>
+      
+      
+      <categories>
+          
+          <category> 北航计算机组成 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 北航计算机组成-P0 </tag>
+            
+            <tag> 北航计算机组成-P1 </tag>
+            
+            <tag> 北航计算机组成-P2 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>何为从代码看Logisim?</title>
       <link href="/2022/12/28/%E4%BD%95%E4%B8%BA%E4%BB%8E%E4%BB%A3%E7%A0%81%E7%9C%8BLogisim/"/>
       <url>/2022/12/28/%E4%BD%95%E4%B8%BA%E4%BB%8E%E4%BB%A3%E7%A0%81%E7%9C%8BLogisim/</url>
@@ -57,9 +86,31 @@
     
     
     <entry>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>archives</title>
       <link href="/archives/index.html"/>
       <url>/archives/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>书籍</title>
+      <link href="/books/index.html"/>
+      <url>/books/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -90,17 +141,6 @@
     
     
     <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>音乐</title>
       <link href="/music/index.html"/>
       <url>/music/index.html</url>
@@ -112,20 +152,9 @@
     
     
     <entry>
-      <title>书籍</title>
-      <link href="/books/index.html"/>
-      <url>/books/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
