@@ -94,16 +94,7 @@
 
 
 
-.layout>#post{
-    background: rgba(255,255,255,.8);
-}
-#aside-content>.sticky_layout>.card-widget{
-    background: rgba(255,255,255,.8);
-}
-/*侧边栏页面*/
-#aside-content>.card-widget  {
-	background: rgba(255,255,255,0.8);
-}
+
 [data-theme=dark] #aside-content>.card-widget  {
 	background: rgba(22, 18, 18, 0.8);
 }
