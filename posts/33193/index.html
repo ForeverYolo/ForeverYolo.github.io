@@ -1,13 +1,13 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>单周期CPU设计文档（Verilog） | ForeverYolo的博客</title><meta name="author" content="ForeverYolo"><meta name="copyright" content="ForeverYolo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Verilog 单周期CPU设计文档 CPU设计方案综述（一）总体设计综述1.IFU（1）端口说明|  序号   | 信号名 | 方向 | 描述 ||  :——:  | :——:  | :——: | :——: || 1  | NPC[31:0] | I | 下一个PC值 || 2  | CLK | I | 时钟信号 || 3  | RESET | I | 复位信号 || 4  | PC[31:0]">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>单周期CPU设计文档（Verilog） | ForeverYolo的博客</title><meta name="author" content="ForeverYolo"><meta name="copyright" content="ForeverYolo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Verilog 单周期CPU设计文档 CPU设计方案综述（一）总体设计综述IFU（1）端口说明     序号 信号名 方向 描述     1 NPC[31:0] I 下一个PC值   2 CLK I 时钟信号   3 RESET I 复位信号   4 PC[31:0] O 当前PC值   5 Instr[31:0] O 当前指令     （2）功能定义     序号 功能 描述     1 取指令">
 <meta property="og:type" content="article">
 <meta property="og:title" content="单周期CPU设计文档（Verilog）">
 <meta property="og:url" content="https://foreveryolo.github.io/posts/33193/index.html">
 <meta property="og:site_name" content="ForeverYolo的博客">
-<meta property="og:description" content="Verilog 单周期CPU设计文档 CPU设计方案综述（一）总体设计综述1.IFU（1）端口说明|  序号   | 信号名 | 方向 | 描述 ||  :——:  | :——:  | :——: | :——: || 1  | NPC[31:0] | I | 下一个PC值 || 2  | CLK | I | 时钟信号 || 3  | RESET | I | 复位信号 || 4  | PC[31:0]">
+<meta property="og:description" content="Verilog 单周期CPU设计文档 CPU设计方案综述（一）总体设计综述IFU（1）端口说明     序号 信号名 方向 描述     1 NPC[31:0] I 下一个PC值   2 CLK I 时钟信号   3 RESET I 复位信号   4 PC[31:0] O 当前PC值   5 Instr[31:0] O 当前指令     （2）功能定义     序号 功能 描述     1 取指令">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://s1.ax1x.com/2022/12/30/pSpyHSO.jpg">
 <meta property="article:published_time" content="2022-12-30T03:19:58.000Z">
-<meta property="article:modified_time" content="2023-01-26T16:40:08.392Z">
+<meta property="article:modified_time" content="2023-01-26T19:05:50.951Z">
 <meta property="article:author" content="ForeverYolo">
 <meta property="article:tag" content="北航计算机组成-P4">
 <meta name="twitter:card" content="summary">
@@ -57,7 +57,7 @@
   isHome: false,
   isHighlightShrink: false,
   isToc: true,
-  postUpdate: '2023-01-27 00:40:08'
+  postUpdate: '2023-01-27 03:05:50'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -146,26 +146,841 @@
       }
     }
     detectApple()
-    })(window)</script><link rel="stylesheet" href="/css/iconfont.css"><link rel="stylesheet" href="/css/myStyle.css"><link rel="stylesheet" href="/css/myIco.css"><script defer src="/live2d-widget-master/autoload.js"></script><!-- hexo injector head_end start -->
+    })(window)</script><link rel="stylesheet" href="/css/iconfont.css"><link rel="stylesheet" href="/css/myStyle.css"><link rel="stylesheet" href="/css/myIco.css"><link rel="stylesheet" href="/css/fontsetting.css"><script defer src="/live2d-widget-master/autoload.js"></script><!-- hexo injector head_end start -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
-<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s1.ax1x.com/2022/12/30/pSpyHSO.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">单周期CPU设计文档（Verilog）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-12-30T03:19:58.000Z" title="发表于 2022-12-30 11:19:58">2022-12-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-01-26T16:40:08.392Z" title="更新于 2023-01-27 00:40:08">2023-01-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%8C%97%E8%88%AA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90/">北航计算机组成</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="单周期CPU设计文档（Verilog）"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong><font size = 5><center>Verilog 单周期CPU设计文档</center></font></strong></p>
-<h1 id="CPU设计方案综述"><a href="#CPU设计方案综述" class="headerlink" title="CPU设计方案综述"></a>CPU设计方案综述</h1><h2 id="（一）总体设计综述"><a href="#（一）总体设计综述" class="headerlink" title="（一）总体设计综述"></a>（一）总体设计综述</h2><h3 id="1-IFU"><a href="#1-IFU" class="headerlink" title="1.IFU"></a>1.IFU</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>| 1  | NPC[31:0] | I | 下一个PC值 |<br>| 2  | CLK | I | 时钟信号 |<br>| 3  | RESET | I | 复位信号 |<br>| 4  | PC[31:0] | O | 当前PC值 |<br>| 5  | Instr[31:0] | O | 当前指令 |</p>
-<p>（2）功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>| 1 | 取指令 | 取出当前PC所对应的指令 |<br>| 2 | 更改PC值 | 利用NPC更改PC值 |</p>
-<h3 id="2-GRF"><a href="#2-GRF" class="headerlink" title="2.GRF"></a>2.GRF</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>| 1 | A1[4:0] | I | 5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD1 |<br>| 2 | A2[4:0] | I | 5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD2 |<br>| 3 | A3[4:0] | I | 5位地址输入信号，指定32个寄存器中的一个，将其作为RD的写入地址 |<br>| 4 | WD[31:0] | I | 32位写入数据 |<br>| 5 | PC[31:0] | I | 当前PC值 |<br>| 6 | RD1[31:0] | O | A1指定寄存器的32位数据 |<br>| 7 | RD2[31:0] | O | A2指定寄存器的32位数据 |<br>| 8 | CLK | I | 时钟信号 |<br>| 9 | WE | I | 写使能信号 |<br>| 10 | RESET | I | 同步复位信号，清零32个寄存器中的数据 |</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>| 1 | 同步复位 | 时钟上升沿到来时，若RESET信号有效，则将32个寄存器中的数据全部清除 |<br>| 2 | 读出数据 | 将A1与A2所存地址对应的寄存器的数据读出到RD1和RD2|<br>| 3 | 写入数据 | 当WE有效且时钟上升沿到来时，将WD写入到A3所存地址对应的寄存器中|</p>
-<h3 id="3-NPC"><a href="#3-NPC" class="headerlink" title="3.NPC"></a>3.NPC</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|NPCControl|I|分支信号|<br>|2|Jump|I|跳转信号|<br>|3|Jreg|I|Jr 信号|<br>|4|PC[31:0]|I|当前PC值|<br>|5|J26imm[25:0]|I|跳转信号的26位立即数|<br>|6|B32imm[31:0]|I|分支信号的扩展后的32位立即数|<br>|7|RegJump[31:0]|I|Jr跳转地址|<br>|8|NPC[31:0]|O|下一个PC值|<br>|9|PC4[31:0]|O|PC+4的值|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|计算下一PC的值|根据指令和当前PC值计算下一PC值|<br>|2|输出PC4|为JR写入寄存器提供数据|</p>
-<h3 id="4-EXT"><a href="#4-EXT" class="headerlink" title="4.EXT"></a>4.EXT</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|i16[15:0]|I|16位立即数<br>|2|i32[31:0]|O|经过扩展后的32位立即数<br>|3|ExtendSign|I|选择扩展类型信号  0：符号扩展 1：无符号扩展|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|符号扩展|将16位立即数符号扩展为32位立即数|<br>|2|无符号扩展|将16位立即数无符号扩展为32位立即数|</p>
-<h3 id="5-DM"><a href="#5-DM" class="headerlink" title="5.DM"></a>5.DM</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|A[31:0]|I|32位地址输入|<br>|2|RD[31:0]|O|32位数据输出|<br>|3|WD[31:0]|I|32位数据输入|<br>|4|PC[31:0]|I|当前PC值|<br>|5|RESET|I|同步复位信号|<br>|6|CLK|I|时钟信号|<br>|7|WE|I|写使能信号|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|写入数据|当WE有效且时钟上升沿到来时，将WD中的数据写入到A所存地址所对应的位置|<br>|2|读出数据|将A所存地址对应位置的数据读出到RD|</p>
-<h3 id="6-Control"><a href="#6-Control" class="headerlink" title="6.Control"></a>6.Control</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|Instr[31:0]|I|当前指令|<br>|2|Bigger|I|ALU两个操作数是否相等信号|<br>|3|ExtendSign|O|扩展类型信号|<br>|4|Jump|O|跳转信号|<br>|5|RegWrite|O|寄存器写使能信号|<br>|6|MemWrite|O|DM写使能信号|<br>|7|MemToReg|O|Reg写入数据类型信号|<br>|8|RegDest|O|A3寄存器选择信号|<br>|9|ALUop|O|ALU功能选择信号|<br>|10|Branch|O|分支信号|<br>|11|Jreg|O|Jr信号|</p>
-<p>(2)真值表<br>|  端口   | add | sub | ori | lw|sw|lui|beq|Jal|Jr|<br>|  :——:  | :——:  | :——: |:——: |:——: |:——: |:——: |:——: |:——: |:——: |<br>|OP|000000|000000|001101|100011|101011|001111|000100|000011|000000|<br>|FC|100000|100010|x|x|x|x|x|x|001000|<br>|ALUop|0000|0001|0011|0000|0000|0100|0000|0000|0000|<br>|Jump|0|0|0|0|0|0|0|1|0|<br>|RegWrite|1|1|1|1|0|1|0|1|0|<br>|MemWrite|0|0|0|0|1|0|0|0|0|<br>|MemToReg|00|00|00|01|00|00|00|10|00|<br>|RegDest|01|01|00|00|00|00|00|10|00|<br>|RegSrc|0|0|1|1|1|1|0|0|0|<br>|Branch|0|0|0|0|0|0|1|0|0|<br>|Jreg|0|0|0|0|0|0|0|0|1|</p>
-<h3 id="7-ALU"><a href="#7-ALU" class="headerlink" title="7.ALU"></a>7.ALU</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|SrcA[31:0]|I|操作数1|<br>|2|SrcB[31:0]|I|操作数2|<br>|3|ALUControl[3:0]|I|ALU功能选择信号<br>|4|Bigger|O|两操作数是否相等信号|<br>|5|Res[31:0]|O|运算结果|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|判断两个操作数是否相等|相等则Bigger输出1否则为0|<br>|2|加运算|res=SrcA+SrcB|<br>|3|减运算|res=SrcA-SrcB|<br>|4|与运算|res=SrcA$SrcB|<br>|5|或运算|res=SrcB|SrcB|<br>|6|加载高位运算|res={SrcB[15:0],16’h0}|</p>
-<h3 id="8-MUX"><a href="#8-MUX" class="headerlink" title="8.MUX"></a>8.MUX</h3><h4 id="1-Mux-4-5"><a href="#1-Mux-4-5" class="headerlink" title="1.Mux_4_5"></a>1.Mux_4_5</h4><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|data0[4:0]|I|数据0|<br>|2|data1[4:0]|I|数据1|<br>|3|data2[4:0]|I|数据2|<br>|4|data3[4:0]|I|数据3|<br>|5|sel[1:0]|I|选择信号|<br>|6|out[4:0]|O|输出|</p>
-<h4 id="2-Mux-4-32"><a href="#2-Mux-4-32" class="headerlink" title="2.Mux_4_32"></a>2.Mux_4_32</h4><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|data0[31:0]|I|数据0|<br>|2|data1[31:0]|I|数据1|<br>|3|data2[31:0]|I|数据2|<br>|4|data3[31:0]|I|数据3|<br>|5|sel[1:0]|I|选择信号|<br>|6|out[31:0]|O|输出|</p>
-<h4 id="3-Mux-2-32"><a href="#3-Mux-2-32" class="headerlink" title="3.Mux_2_32"></a>3.Mux_2_32</h4><div class="table-container">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s1.ax1x.com/2022/12/30/pSpyHSO.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">单周期CPU设计文档（Verilog）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-12-30T03:19:58.000Z" title="发表于 2022-12-30 11:19:58">2022-12-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-01-26T19:05:50.951Z" title="更新于 2023-01-27 03:05:50">2023-01-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%8C%97%E8%88%AA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90/">北航计算机组成</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="单周期CPU设计文档（Verilog）"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong><font size = 5><center>Verilog 单周期CPU设计文档</center></font></strong></p>
+<h1 id="CPU设计方案综述"><a href="#CPU设计方案综述" class="headerlink" title="CPU设计方案综述"></a>CPU设计方案综述</h1><h2 id="（一）总体设计综述"><a href="#（一）总体设计综述" class="headerlink" title="（一）总体设计综述"></a>（一）总体设计综述</h2><h3 id="IFU"><a href="#IFU" class="headerlink" title="IFU"></a>IFU</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">NPC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">下一个PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">CLK</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">RESET</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">PC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">当前PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">Instr[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">当前指令</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>（2）功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">取指令</td>
+<td style="text-align:center">取出当前PC所对应的指令</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">更改PC值</td>
+<td style="text-align:center">利用NPC更改PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="GRF"><a href="#GRF" class="headerlink" title="GRF"></a>GRF</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A1[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD1</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">A2[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD2</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">A3[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">5位地址输入信号，指定32个寄存器中的一个，将其作为RD的写入地址</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">WD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">32位写入数据</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">当前PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">RD1[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A1指定寄存器的32位数据</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">RD2[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A2指定寄存器的32位数据</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">CLK</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">RESET</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号，清零32个寄存器中的数据</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">同步复位</td>
+<td style="text-align:center">时钟上升沿到来时，若RESET信号有效，则将32个寄存器中的数据全部清除</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">读出数据</td>
+<td style="text-align:center">将A1与A2所存地址对应的寄存器的数据读出到RD1和RD2</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">写入数据</td>
+<td style="text-align:center">当WE有效且时钟上升沿到来时，将WD写入到A3所存地址对应的寄存器中</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="NPC"><a href="#NPC" class="headerlink" title="NPC"></a>NPC</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">NPCControl</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">分支信号</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">Jump</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">跳转信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">Jreg</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">Jr 信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">当前PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">J26imm[25:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">跳转信号的26位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">B32imm[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">分支信号的扩展后的32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">RegJump[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">Jr跳转地址</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">NPC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">下一个PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">PC4[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">PC+4的值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">计算下一PC的值</td>
+<td style="text-align:center">根据指令和当前PC值计算下一PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">输出PC4</td>
+<td style="text-align:center">为JR写入寄存器提供数据</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="EXT"><a href="#EXT" class="headerlink" title="EXT"></a>EXT</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">i16[15:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">16位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">i32[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">经过扩展后的32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">ExtendSign</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">选择扩展类型信号  0：符号扩展 1：无符号扩展</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">符号扩展</td>
+<td style="text-align:center">将16位立即数符号扩展为32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">无符号扩展</td>
+<td style="text-align:center">将16位立即数无符号扩展为32位立即数</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="DM"><a href="#DM" class="headerlink" title="DM"></a>DM</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">32位地址输入</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">RD[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">32位数据输出</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">WD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">32位数据输入</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">当前PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">RESET</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">CLK</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">写入数据</td>
+<td style="text-align:center">当WE有效且时钟上升沿到来时，将WD中的数据写入到A所存地址所对应的位置</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">读出数据</td>
+<td style="text-align:center">将A所存地址对应位置的数据读出到RD</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Control"><a href="#Control" class="headerlink" title="Control"></a>Control</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">当前指令</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">Bigger</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ALU两个操作数是否相等信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">ExtendSign</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">扩展类型信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">Jump</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">跳转信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">RegWrite</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">寄存器写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">MemWrite</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">DM写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">MemToReg</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">Reg写入数据类型信号</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">RegDest</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A3寄存器选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">ALUop</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">ALU功能选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">Branch</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">分支信号</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">Jreg</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">Jr信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)真值表</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">端口</th>
+<th style="text-align:center">add</th>
+<th style="text-align:center">sub</th>
+<th style="text-align:center">ori</th>
+<th style="text-align:center">lw</th>
+<th style="text-align:center">sw</th>
+<th style="text-align:center">lui</th>
+<th style="text-align:center">beq</th>
+<th style="text-align:center">Jal</th>
+<th style="text-align:center">Jr</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">OP</td>
+<td style="text-align:center">000000</td>
+<td style="text-align:center">000000</td>
+<td style="text-align:center">001101</td>
+<td style="text-align:center">100011</td>
+<td style="text-align:center">101011</td>
+<td style="text-align:center">001111</td>
+<td style="text-align:center">000100</td>
+<td style="text-align:center">000011</td>
+<td style="text-align:center">000000</td>
+</tr>
+<tr>
+<td style="text-align:center">FC</td>
+<td style="text-align:center">100000</td>
+<td style="text-align:center">100010</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">001000</td>
+</tr>
+<tr>
+<td style="text-align:center">ALUop</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0001</td>
+<td style="text-align:center">0011</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0100</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0000</td>
+</tr>
+<tr>
+<td style="text-align:center">Jump</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">RegWrite</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">MemWrite</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">MemToReg</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">01</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">10</td>
+<td style="text-align:center">00</td>
+</tr>
+<tr>
+<td style="text-align:center">RegDest</td>
+<td style="text-align:center">01</td>
+<td style="text-align:center">01</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">10</td>
+<td style="text-align:center">00</td>
+</tr>
+<tr>
+<td style="text-align:center">RegSrc</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">Branch</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">Jreg</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="ALU"><a href="#ALU" class="headerlink" title="ALU"></a>ALU</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">SrcA[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数1</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">SrcB[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数2</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">ALUControl[3:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ALU功能选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">Bigger</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">两操作数是否相等信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">Res[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">运算结果</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">判断两个操作数是否相等</td>
+<td style="text-align:center">相等则Bigger输出1否则为0</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">加运算</td>
+<td style="text-align:center">res=SrcA+SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">减运算</td>
+<td style="text-align:center">res=SrcA-SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">与运算</td>
+<td style="text-align:center">res=SrcA$SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">或运算</td>
+<td style="text-align:center">res=SrcB</td>
+<td>SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">加载高位运算</td>
+<td style="text-align:center">res={SrcB[15:0],16’h0}</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="MUX"><a href="#MUX" class="headerlink" title="MUX"></a>MUX</h3><h4 id="Mux-4-5"><a href="#Mux-4-5" class="headerlink" title="Mux_4_5"></a>Mux_4_5</h4><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">data0[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据0</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">data1[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据1</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">data2[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据2</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">data3[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据3</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">sel[1:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">out[4:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">输出</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Mux-4-32"><a href="#Mux-4-32" class="headerlink" title="Mux_4_32"></a>Mux_4_32</h4><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">data0[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据0</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">data1[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据1</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">data2[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据2</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">data3[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">数据3</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">sel[1:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">out[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">输出</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Mux-2-32"><a href="#Mux-2-32" class="headerlink" title="Mux_2_32"></a>Mux_2_32</h4><p>（1）端口说明</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -203,7 +1018,25 @@
 </tbody>
 </table>
 </div>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|选择数据|根据选择信号进行选择数据并输出</p>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">选择数据</td>
+<td style="text-align:center">根据选择信号进行选择数据并输出</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h1 id="测试方案"><a href="#测试方案" class="headerlink" title="测试方案"></a>测试方案</h1><p>(1)测试代码  </p>
 <pre><code>ori $a0,$0,1999  
 ori $a1,$a0,111 
@@ -285,12 +1118,12 @@ lui $v0,11
 @00003090: $ 8 &lt;= 045707cf
 @00003094: $10 &lt;= 045707cf
 @000030a0: $ 2 &lt;= 000b0000
-</code></pre><h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><h2 id="（1）阅读下面给出的-DM-的输入示例中（示例-DM-容量为-4KB，即-32bit-×-1024字），根据你的理解回答，这个-addr-信号又是从哪里来的？地址信号-addr-位数为什么是-11-2-而不是-9-0-？"><a href="#（1）阅读下面给出的-DM-的输入示例中（示例-DM-容量为-4KB，即-32bit-×-1024字），根据你的理解回答，这个-addr-信号又是从哪里来的？地址信号-addr-位数为什么是-11-2-而不是-9-0-？" class="headerlink" title="（1）阅读下面给出的 DM 的输入示例中（示例 DM 容量为 4KB，即 32bit × 1024字），根据你的理解回答，这个 addr 信号又是从哪里来的？地址信号 addr 位数为什么是 [11:2] 而不是 [9:0] ？"></a>（1）阅读下面给出的 DM 的输入示例中（示例 DM 容量为 4KB，即 32bit × 1024字），根据你的理解回答，这个 addr 信号又是从哪里来的？地址信号 addr 位数为什么是 [11:2] 而不是 [9:0] ？</h2><p><img src="66.png" alt="66"><br>答：addr是从ALU的输出信号中经过位的截取而得到的，代表的是将要读取的DM的储存器的位置。<br>因为MIPS以字为单位，存储的时候也是以字为单位存储的（32位reg）,左移两位相当于除4，除4才可以得到我们需要的字，即我们需要的数据。  </p>
-<h2 id="（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。"><a href="#（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。" class="headerlink" title="（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。"></a>（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。</h2><p>答：<br><img src="控制信号对应指令.png" alt="1"><br><img src="指令对应控制信号.png" alt="2"><br>控制信号对应指令：哪种信号需要为哪些指令提供什么样的值一目了然<br>指令对于控制信号：哪种指令需要什么指令取什么值一目了然<br>这是两种看待控制信号和指令之间关系的角度。<br>前者代码较为简洁，后者代码则较为繁多。<br>前者不能很好的体现一条条指令的独立性，后者则可以很好体现一条条指令的独立性。  </p>
-<h2 id="（3）在相应的部件中，复位信号的设计都是同步复位，这与-P3-中的设计要求不同。请对比同步复位与异步复位这两种方式的-reset-信号与-clk-信号优先级的关系。"><a href="#（3）在相应的部件中，复位信号的设计都是同步复位，这与-P3-中的设计要求不同。请对比同步复位与异步复位这两种方式的-reset-信号与-clk-信号优先级的关系。" class="headerlink" title="（3）在相应的部件中，复位信号的设计都是同步复位，这与 P3 中的设计要求不同。请对比同步复位与异步复位这两种方式的 reset 信号与 clk 信号优先级的关系。"></a>（3）在相应的部件中，复位信号的设计都是同步复位，这与 P3 中的设计要求不同。请对比同步复位与异步复位这两种方式的 reset 信号与 clk 信号优先级的关系。</h2><p>答：我们可以通过Verilog中实现它们的方式进行对比：<br><img src="复位.png" alt="123"><br>前者为异步复位，后者为同步复位。  </p>
+</code></pre><h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><h3 id="（1）阅读下面给出的-DM-的输入示例中（示例-DM-容量为-4KB，即-32bit-×-1024字），根据你的理解回答，这个-addr-信号又是从哪里来的？地址信号-addr-位数为什么是-11-2-而不是-9-0-？"><a href="#（1）阅读下面给出的-DM-的输入示例中（示例-DM-容量为-4KB，即-32bit-×-1024字），根据你的理解回答，这个-addr-信号又是从哪里来的？地址信号-addr-位数为什么是-11-2-而不是-9-0-？" class="headerlink" title="（1）阅读下面给出的 DM 的输入示例中（示例 DM 容量为 4KB，即 32bit × 1024字），根据你的理解回答，这个 addr 信号又是从哪里来的？地址信号 addr 位数为什么是 [11:2] 而不是 [9:0] ？"></a>（1）阅读下面给出的 DM 的输入示例中（示例 DM 容量为 4KB，即 32bit × 1024字），根据你的理解回答，这个 addr 信号又是从哪里来的？地址信号 addr 位数为什么是 [11:2] 而不是 [9:0] ？</h3><p><img src="66.png" alt="66"><br>答：addr是从ALU的输出信号中经过位的截取而得到的，代表的是将要读取的DM的储存器的位置。<br>因为MIPS以字为单位，存储的时候也是以字为单位存储的（32位reg）,左移两位相当于除4，除4才可以得到我们需要的字，即我们需要的数据。  </p>
+<h3 id="（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。"><a href="#（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。" class="headerlink" title="（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。"></a>（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。</h3><p>答：<br><img src="控制信号对应指令.png" alt="1"><br><img src="指令对应控制信号.png" alt="2"><br>控制信号对应指令：哪种信号需要为哪些指令提供什么样的值一目了然<br>指令对于控制信号：哪种指令需要什么指令取什么值一目了然<br>这是两种看待控制信号和指令之间关系的角度。<br>前者代码较为简洁，后者代码则较为繁多。<br>前者不能很好的体现一条条指令的独立性，后者则可以很好体现一条条指令的独立性。  </p>
+<h3 id="（3）在相应的部件中，复位信号的设计都是同步复位，这与-P3-中的设计要求不同。请对比同步复位与异步复位这两种方式的-reset-信号与-clk-信号优先级的关系。"><a href="#（3）在相应的部件中，复位信号的设计都是同步复位，这与-P3-中的设计要求不同。请对比同步复位与异步复位这两种方式的-reset-信号与-clk-信号优先级的关系。" class="headerlink" title="（3）在相应的部件中，复位信号的设计都是同步复位，这与 P3 中的设计要求不同。请对比同步复位与异步复位这两种方式的 reset 信号与 clk 信号优先级的关系。"></a>（3）在相应的部件中，复位信号的设计都是同步复位，这与 P3 中的设计要求不同。请对比同步复位与异步复位这两种方式的 reset 信号与 clk 信号优先级的关系。</h3><p>答：我们可以通过Verilog中实现它们的方式进行对比：<br><img src="复位.png" alt="123"><br>前者为异步复位，后者为同步复位。  </p>
 <ul>
 <li>可以看出来异步复位中clk和reset都为敏感信号，两者中任意一者发生变化都会导致always块的运行，clk和reset无相关关系，所以优先级相同。  </li>
 <li>同步复位中只有clk为敏感信号，只有满足clk上升沿时，always块才会运行，这时才会考虑reset的值是否有效，所以clk和reset存在类似于主从关系的关系，优先级clk&gt;reset。</li>
 </ul>
-<h2 id="（4）C-语言是一种弱类型程序设计语言。C-语言中不对计算结果溢出进行处理，这意味着-C-语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持-C-语言，MIPS-指令的所有计算指令均可以忽略溢出。-请说明为什么在忽略溢出的前提下，addi-与-addiu-是等价的，add-与-addu-是等价的。提示：阅读《MIPS32®-Architecture-For-Programmers-Volume-II-The-MIPS32®-Instruction-Set》中相关指令的-Operation-部分。"><a href="#（4）C-语言是一种弱类型程序设计语言。C-语言中不对计算结果溢出进行处理，这意味着-C-语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持-C-语言，MIPS-指令的所有计算指令均可以忽略溢出。-请说明为什么在忽略溢出的前提下，addi-与-addiu-是等价的，add-与-addu-是等价的。提示：阅读《MIPS32®-Architecture-For-Programmers-Volume-II-The-MIPS32®-Instruction-Set》中相关指令的-Operation-部分。" class="headerlink" title="（4）C 语言是一种弱类型程序设计语言。C 语言中不对计算结果溢出进行处理，这意味着 C 语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持 C 语言，MIPS 指令的所有计算指令均可以忽略溢出。 请说明为什么在忽略溢出的前提下，addi 与 addiu 是等价的，add 与 addu 是等价的。提示：阅读《MIPS32® Architecture For Programmers Volume II: The MIPS32® Instruction Set》中相关指令的 Operation 部分。"></a>（4）C 语言是一种弱类型程序设计语言。C 语言中不对计算结果溢出进行处理，这意味着 C 语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持 C 语言，MIPS 指令的所有计算指令均可以忽略溢出。 请说明为什么在忽略溢出的前提下，addi 与 addiu 是等价的，add 与 addu 是等价的。提示：阅读《MIPS32® Architecture For Programmers Volume II: The MIPS32® Instruction Set》中相关指令的 Operation 部分。</h2><p>答：addi与addiu行为区别上的差异在于：出现溢出时，addiu忽略溢出，将溢出位<strong>舍弃</strong>，addi则会<strong>抛出错误</strong>SignalException(IntegerOverflow)，其余表现形式与addiu<strong>相同</strong>，故忽略溢出，则错误不抛出，此时两者便等价了。<br><strong><em>add与addu上述相同。</em></strong></p>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io">ForeverYolo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io/posts/33193/">https://foreveryolo.github.io/posts/33193/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://foreveryolo.github.io" target="_blank">ForeverYolo的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%8C%97%E8%88%AA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90-P4/">北航计算机组成-P4</a></div><div class="post_share"><div class="social-share" data-image="https://s1.ax1x.com/2022/12/30/pSpyHSO.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/34987/" title="单周期CPU全自动测试思路（Verilog）"><img class="cover" src="https://s1.ax1x.com/2022/12/30/pSpB2V0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">单周期CPU全自动测试思路（Verilog）</div></div></a></div><div class="next-post pull-right"><a href="/posts/6588/" title="单周期CPU全自动测试思路（Logisim）"><img class="cover" src="https://s1.ax1x.com/2022/12/29/pSp8oJ1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">单周期CPU全自动测试思路（Logisim）</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/posts/34987/" title="单周期CPU全自动测试思路（Verilog）"><img class="cover" src="https://s1.ax1x.com/2022/12/30/pSpB2V0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-12-30</div><div class="title">单周期CPU全自动测试思路（Verilog）</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ForeverYolo</div><div class="author-info__description">这是ForeverYolo的博客网站</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ForeverYolo/"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ForeverYolo/" target="_blank" title=""><i class="fab fa-github"></i></a><a class="social-icon" href="tencent://message/?uin=2572131118&amp;Site=Sambow&amp;Menu=yes" target="_blank" title="QQ"><i class="iconfont icon-QQ"></i></a><a class="social-icon" href="mailto:2572131118@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">北航在线打工人Orz</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CPU%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E7%BB%BC%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">CPU设计方案综述</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EF%BC%88%E4%B8%80%EF%BC%89%E6%80%BB%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BB%BC%E8%BF%B0"><span class="toc-number">1.1.</span> <span class="toc-text">（一）总体设计综述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-IFU"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.IFU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-GRF"><span class="toc-number">1.1.2.</span> <span class="toc-text">2.GRF</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-NPC"><span class="toc-number">1.1.3.</span> <span class="toc-text">3.NPC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-EXT"><span class="toc-number">1.1.4.</span> <span class="toc-text">4.EXT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-DM"><span class="toc-number">1.1.5.</span> <span class="toc-text">5.DM</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-Control"><span class="toc-number">1.1.6.</span> <span class="toc-text">6.Control</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-ALU"><span class="toc-number">1.1.7.</span> <span class="toc-text">7.ALU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-MUX"><span class="toc-number">1.1.8.</span> <span class="toc-text">8.MUX</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Mux-4-5"><span class="toc-number">1.1.8.1.</span> <span class="toc-text">1.Mux_4_5</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Mux-4-32"><span class="toc-number">1.1.8.2.</span> <span class="toc-text">2.Mux_4_32</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Mux-2-32"><span class="toc-number">1.1.8.3.</span> <span class="toc-text">3.Mux_2_32</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">测试方案</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">思考题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E9%98%85%E8%AF%BB%E4%B8%8B%E9%9D%A2%E7%BB%99%E5%87%BA%E7%9A%84-DM-%E7%9A%84%E8%BE%93%E5%85%A5%E7%A4%BA%E4%BE%8B%E4%B8%AD%EF%BC%88%E7%A4%BA%E4%BE%8B-DM-%E5%AE%B9%E9%87%8F%E4%B8%BA-4KB%EF%BC%8C%E5%8D%B3-32bit-%C3%97-1024%E5%AD%97%EF%BC%89%EF%BC%8C%E6%A0%B9%E6%8D%AE%E4%BD%A0%E7%9A%84%E7%90%86%E8%A7%A3%E5%9B%9E%E7%AD%94%EF%BC%8C%E8%BF%99%E4%B8%AA-addr-%E4%BF%A1%E5%8F%B7%E5%8F%88%E6%98%AF%E4%BB%8E%E5%93%AA%E9%87%8C%E6%9D%A5%E7%9A%84%EF%BC%9F%E5%9C%B0%E5%9D%80%E4%BF%A1%E5%8F%B7-addr-%E4%BD%8D%E6%95%B0%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF-11-2-%E8%80%8C%E4%B8%8D%E6%98%AF-9-0-%EF%BC%9F"><span class="toc-number">3.1.</span> <span class="toc-text">（1）阅读下面给出的 DM 的输入示例中（示例 DM 容量为 4KB，即 32bit × 1024字），根据你的理解回答，这个 addr 信号又是从哪里来的？地址信号 addr 位数为什么是 [11:2] 而不是 [9:0] ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E6%80%9D%E8%80%83%E4%B8%8A%E8%BF%B0%E4%B8%A4%E7%A7%8D%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E8%AF%91%E7%A0%81%E6%96%B9%E5%BC%8F%EF%BC%8C%E7%BB%99%E5%87%BA%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B%EF%BC%8C%E5%B9%B6%E5%B0%9D%E8%AF%95%E5%AF%B9%E6%AF%94%E5%90%84%E6%96%B9%E5%BC%8F%E7%9A%84%E4%BC%98%E5%8A%A3%E3%80%82"><span class="toc-number">3.2.</span> <span class="toc-text">（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E5%9C%A8%E7%9B%B8%E5%BA%94%E7%9A%84%E9%83%A8%E4%BB%B6%E4%B8%AD%EF%BC%8C%E5%A4%8D%E4%BD%8D%E4%BF%A1%E5%8F%B7%E7%9A%84%E8%AE%BE%E8%AE%A1%E9%83%BD%E6%98%AF%E5%90%8C%E6%AD%A5%E5%A4%8D%E4%BD%8D%EF%BC%8C%E8%BF%99%E4%B8%8E-P3-%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E8%A6%81%E6%B1%82%E4%B8%8D%E5%90%8C%E3%80%82%E8%AF%B7%E5%AF%B9%E6%AF%94%E5%90%8C%E6%AD%A5%E5%A4%8D%E4%BD%8D%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%A4%8D%E4%BD%8D%E8%BF%99%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%E7%9A%84-reset-%E4%BF%A1%E5%8F%B7%E4%B8%8E-clk-%E4%BF%A1%E5%8F%B7%E4%BC%98%E5%85%88%E7%BA%A7%E7%9A%84%E5%85%B3%E7%B3%BB%E3%80%82"><span class="toc-number">3.3.</span> <span class="toc-text">（3）在相应的部件中，复位信号的设计都是同步复位，这与 P3 中的设计要求不同。请对比同步复位与异步复位这两种方式的 reset 信号与 clk 信号优先级的关系。</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EF%BC%884%EF%BC%89C-%E8%AF%AD%E8%A8%80%E6%98%AF%E4%B8%80%E7%A7%8D%E5%BC%B1%E7%B1%BB%E5%9E%8B%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80%E3%80%82C-%E8%AF%AD%E8%A8%80%E4%B8%AD%E4%B8%8D%E5%AF%B9%E8%AE%A1%E7%AE%97%E7%BB%93%E6%9E%9C%E6%BA%A2%E5%87%BA%E8%BF%9B%E8%A1%8C%E5%A4%84%E7%90%86%EF%BC%8C%E8%BF%99%E6%84%8F%E5%91%B3%E7%9D%80-C-%E8%AF%AD%E8%A8%80%E8%A6%81%E6%B1%82%E7%A8%8B%E5%BA%8F%E5%91%98%E5%BF%85%E9%A1%BB%E5%BE%88%E6%B8%85%E6%A5%9A%E8%AE%A1%E7%AE%97%E7%BB%93%E6%9E%9C%E6%98%AF%E5%90%A6%E4%BC%9A%E5%AF%BC%E8%87%B4%E6%BA%A2%E5%87%BA%E3%80%82%E5%9B%A0%E6%AD%A4%EF%BC%8C%E5%A6%82%E6%9E%9C%E4%BB%85%E4%BB%85%E6%94%AF%E6%8C%81-C-%E8%AF%AD%E8%A8%80%EF%BC%8CMIPS-%E6%8C%87%E4%BB%A4%E7%9A%84%E6%89%80%E6%9C%89%E8%AE%A1%E7%AE%97%E6%8C%87%E4%BB%A4%E5%9D%87%E5%8F%AF%E4%BB%A5%E5%BF%BD%E7%95%A5%E6%BA%A2%E5%87%BA%E3%80%82-%E8%AF%B7%E8%AF%B4%E6%98%8E%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E5%BF%BD%E7%95%A5%E6%BA%A2%E5%87%BA%E7%9A%84%E5%89%8D%E6%8F%90%E4%B8%8B%EF%BC%8Caddi-%E4%B8%8E-addiu-%E6%98%AF%E7%AD%89%E4%BB%B7%E7%9A%84%EF%BC%8Cadd-%E4%B8%8E-addu-%E6%98%AF%E7%AD%89%E4%BB%B7%E7%9A%84%E3%80%82%E6%8F%90%E7%A4%BA%EF%BC%9A%E9%98%85%E8%AF%BB%E3%80%8AMIPS32%C2%AE-Architecture-For-Programmers-Volume-II-The-MIPS32%C2%AE-Instruction-Set%E3%80%8B%E4%B8%AD%E7%9B%B8%E5%85%B3%E6%8C%87%E4%BB%A4%E7%9A%84-Operation-%E9%83%A8%E5%88%86%E3%80%82"><span class="toc-number">3.4.</span> <span class="toc-text">（4）C 语言是一种弱类型程序设计语言。C 语言中不对计算结果溢出进行处理，这意味着 C 语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持 C 语言，MIPS 指令的所有计算指令均可以忽略溢出。 请说明为什么在忽略溢出的前提下，addi 与 addiu 是等价的，add 与 addu 是等价的。提示：阅读《MIPS32® Architecture For Programmers Volume II: The MIPS32® Instruction Set》中相关指令的 Operation 部分。</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/2344/" title="算法——快速运算"><img src="https://s1.ax1x.com/2023/01/26/pSN7D5F.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="算法——快速运算"/></a><div class="content"><a class="title" href="/posts/2344/" title="算法——快速运算">算法——快速运算</a><time datetime="2023-01-26T15:30:23.000Z" title="发表于 2023-01-26 23:30:23">2023-01-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/39608/" title="MIPS微系统设计注意事项"><img src="https://s1.ax1x.com/2023/01/05/pSka3h6.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIPS微系统设计注意事项"/></a><div class="content"><a class="title" href="/posts/39608/" title="MIPS微系统设计注意事项">MIPS微系统设计注意事项</a><time datetime="2023-01-05T03:21:21.000Z" title="发表于 2023-01-05 11:21:21">2023-01-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/14079/" title="中断支持流水线CPU设计文档（Verilog）"><img src="https://s1.ax1x.com/2023/01/04/pSF8k1s.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="中断支持流水线CPU设计文档（Verilog）"/></a><div class="content"><a class="title" href="/posts/14079/" title="中断支持流水线CPU设计文档（Verilog）">中断支持流水线CPU设计文档（Verilog）</a><time datetime="2023-01-04T05:59:22.000Z" title="发表于 2023-01-04 13:59:22">2023-01-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/47414/" title="中断支持流水线CPU全自动测试思路（Verilog）"><img src="https://s1.ax1x.com/2023/01/04/pSFKZnS.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="中断支持流水线CPU全自动测试思路（Verilog）"/></a><div class="content"><a class="title" href="/posts/47414/" title="中断支持流水线CPU全自动测试思路（Verilog）">中断支持流水线CPU全自动测试思路（Verilog）</a><time datetime="2023-01-04T04:24:24.000Z" title="发表于 2023-01-04 12:24:24">2023-01-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/33345/" title="流水线设计与添加指令经验总结"><img src="https://s1.ax1x.com/2023/01/03/pSPvHhR.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="流水线设计与添加指令经验总结"/></a><div class="content"><a class="title" href="/posts/33345/" title="流水线设计与添加指令经验总结">流水线设计与添加指令经验总结</a><time datetime="2023-01-03T03:08:10.000Z" title="发表于 2023-01-03 11:08:10">2023-01-03</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By ForeverYolo</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script src="/js/jquery.js"></script><script src="/js/foot.js"></script><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.8" zIndex="-1" count="150" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="true" data-text="青青子衿，悠悠我心。,纵我不往，子宁不嗣音？,青青子佩，悠悠我思。,纵我不往，子宁不来？,挑兮达兮，在城阙兮。,一日不见，如三月兮。,野有蔓草，零露漙兮。,有美一人，清扬婉兮。,邂逅相遇，适我愿兮。,野有蔓草，零露瀼瀼。,有美一人，婉如清扬。,邂逅相遇，与子偕臧。,没啦！别点啦!要循环啦!" data-fontsize="20px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+<h3 id="（4）C-语言是一种弱类型程序设计语言。C-语言中不对计算结果溢出进行处理，这意味着-C-语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持-C-语言，MIPS-指令的所有计算指令均可以忽略溢出。-请说明为什么在忽略溢出的前提下，addi-与-addiu-是等价的，add-与-addu-是等价的。提示：阅读《MIPS32®-Architecture-For-Programmers-Volume-II-The-MIPS32®-Instruction-Set》中相关指令的-Operation-部分。"><a href="#（4）C-语言是一种弱类型程序设计语言。C-语言中不对计算结果溢出进行处理，这意味着-C-语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持-C-语言，MIPS-指令的所有计算指令均可以忽略溢出。-请说明为什么在忽略溢出的前提下，addi-与-addiu-是等价的，add-与-addu-是等价的。提示：阅读《MIPS32®-Architecture-For-Programmers-Volume-II-The-MIPS32®-Instruction-Set》中相关指令的-Operation-部分。" class="headerlink" title="（4）C 语言是一种弱类型程序设计语言。C 语言中不对计算结果溢出进行处理，这意味着 C 语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持 C 语言，MIPS 指令的所有计算指令均可以忽略溢出。 请说明为什么在忽略溢出的前提下，addi 与 addiu 是等价的，add 与 addu 是等价的。提示：阅读《MIPS32® Architecture For Programmers Volume II: The MIPS32® Instruction Set》中相关指令的 Operation 部分。"></a>（4）C 语言是一种弱类型程序设计语言。C 语言中不对计算结果溢出进行处理，这意味着 C 语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持 C 语言，MIPS 指令的所有计算指令均可以忽略溢出。 请说明为什么在忽略溢出的前提下，addi 与 addiu 是等价的，add 与 addu 是等价的。提示：阅读《MIPS32® Architecture For Programmers Volume II: The MIPS32® Instruction Set》中相关指令的 Operation 部分。</h3><p>答：addi与addiu行为区别上的差异在于：出现溢出时，addiu忽略溢出，将溢出位<strong>舍弃</strong>，addi则会<strong>抛出错误</strong>SignalException(IntegerOverflow)，其余表现形式与addiu<strong>相同</strong>，故忽略溢出，则错误不抛出，此时两者便等价了。<br><strong><em>add与addu上述相同。</em></strong></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io">ForeverYolo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io/posts/33193/">https://foreveryolo.github.io/posts/33193/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://foreveryolo.github.io" target="_blank">ForeverYolo的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%8C%97%E8%88%AA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90-P4/">北航计算机组成-P4</a></div><div class="post_share"><div class="social-share" data-image="https://s1.ax1x.com/2022/12/30/pSpyHSO.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/34987/" title="单周期CPU全自动测试思路（Verilog）"><img class="cover" src="https://s1.ax1x.com/2022/12/30/pSpB2V0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">单周期CPU全自动测试思路（Verilog）</div></div></a></div><div class="next-post pull-right"><a href="/posts/6588/" title="单周期CPU全自动测试思路（Logisim）"><img class="cover" src="https://s1.ax1x.com/2022/12/29/pSp8oJ1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">单周期CPU全自动测试思路（Logisim）</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/posts/34987/" title="单周期CPU全自动测试思路（Verilog）"><img class="cover" src="https://s1.ax1x.com/2022/12/30/pSpB2V0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-12-30</div><div class="title">单周期CPU全自动测试思路（Verilog）</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ForeverYolo</div><div class="author-info__description">这是ForeverYolo的博客网站</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ForeverYolo/"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ForeverYolo/" target="_blank" title=""><i class="fab fa-github"></i></a><a class="social-icon" href="tencent://message/?uin=2572131118&amp;Site=Sambow&amp;Menu=yes" target="_blank" title="QQ"><i class="iconfont icon-QQ"></i></a><a class="social-icon" href="mailto:2572131118@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">北航在线打工人Orz</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CPU%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E7%BB%BC%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">CPU设计方案综述</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EF%BC%88%E4%B8%80%EF%BC%89%E6%80%BB%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BB%BC%E8%BF%B0"><span class="toc-number">1.1.</span> <span class="toc-text">（一）总体设计综述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IFU"><span class="toc-number">1.1.1.</span> <span class="toc-text">IFU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GRF"><span class="toc-number">1.1.2.</span> <span class="toc-text">GRF</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NPC"><span class="toc-number">1.1.3.</span> <span class="toc-text">NPC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EXT"><span class="toc-number">1.1.4.</span> <span class="toc-text">EXT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DM"><span class="toc-number">1.1.5.</span> <span class="toc-text">DM</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Control"><span class="toc-number">1.1.6.</span> <span class="toc-text">Control</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ALU"><span class="toc-number">1.1.7.</span> <span class="toc-text">ALU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MUX"><span class="toc-number">1.1.8.</span> <span class="toc-text">MUX</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Mux-4-5"><span class="toc-number">1.1.8.1.</span> <span class="toc-text">Mux_4_5</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Mux-4-32"><span class="toc-number">1.1.8.2.</span> <span class="toc-text">Mux_4_32</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Mux-2-32"><span class="toc-number">1.1.8.3.</span> <span class="toc-text">Mux_2_32</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">测试方案</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">思考题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E9%98%85%E8%AF%BB%E4%B8%8B%E9%9D%A2%E7%BB%99%E5%87%BA%E7%9A%84-DM-%E7%9A%84%E8%BE%93%E5%85%A5%E7%A4%BA%E4%BE%8B%E4%B8%AD%EF%BC%88%E7%A4%BA%E4%BE%8B-DM-%E5%AE%B9%E9%87%8F%E4%B8%BA-4KB%EF%BC%8C%E5%8D%B3-32bit-%C3%97-1024%E5%AD%97%EF%BC%89%EF%BC%8C%E6%A0%B9%E6%8D%AE%E4%BD%A0%E7%9A%84%E7%90%86%E8%A7%A3%E5%9B%9E%E7%AD%94%EF%BC%8C%E8%BF%99%E4%B8%AA-addr-%E4%BF%A1%E5%8F%B7%E5%8F%88%E6%98%AF%E4%BB%8E%E5%93%AA%E9%87%8C%E6%9D%A5%E7%9A%84%EF%BC%9F%E5%9C%B0%E5%9D%80%E4%BF%A1%E5%8F%B7-addr-%E4%BD%8D%E6%95%B0%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF-11-2-%E8%80%8C%E4%B8%8D%E6%98%AF-9-0-%EF%BC%9F"><span class="toc-number">3.0.1.</span> <span class="toc-text">（1）阅读下面给出的 DM 的输入示例中（示例 DM 容量为 4KB，即 32bit × 1024字），根据你的理解回答，这个 addr 信号又是从哪里来的？地址信号 addr 位数为什么是 [11:2] 而不是 [9:0] ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E6%80%9D%E8%80%83%E4%B8%8A%E8%BF%B0%E4%B8%A4%E7%A7%8D%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E8%AF%91%E7%A0%81%E6%96%B9%E5%BC%8F%EF%BC%8C%E7%BB%99%E5%87%BA%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B%EF%BC%8C%E5%B9%B6%E5%B0%9D%E8%AF%95%E5%AF%B9%E6%AF%94%E5%90%84%E6%96%B9%E5%BC%8F%E7%9A%84%E4%BC%98%E5%8A%A3%E3%80%82"><span class="toc-number">3.0.2.</span> <span class="toc-text">（2）思考上述两种控制器设计的译码方式，给出代码示例，并尝试对比各方式的优劣。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E5%9C%A8%E7%9B%B8%E5%BA%94%E7%9A%84%E9%83%A8%E4%BB%B6%E4%B8%AD%EF%BC%8C%E5%A4%8D%E4%BD%8D%E4%BF%A1%E5%8F%B7%E7%9A%84%E8%AE%BE%E8%AE%A1%E9%83%BD%E6%98%AF%E5%90%8C%E6%AD%A5%E5%A4%8D%E4%BD%8D%EF%BC%8C%E8%BF%99%E4%B8%8E-P3-%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E8%A6%81%E6%B1%82%E4%B8%8D%E5%90%8C%E3%80%82%E8%AF%B7%E5%AF%B9%E6%AF%94%E5%90%8C%E6%AD%A5%E5%A4%8D%E4%BD%8D%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%A4%8D%E4%BD%8D%E8%BF%99%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%E7%9A%84-reset-%E4%BF%A1%E5%8F%B7%E4%B8%8E-clk-%E4%BF%A1%E5%8F%B7%E4%BC%98%E5%85%88%E7%BA%A7%E7%9A%84%E5%85%B3%E7%B3%BB%E3%80%82"><span class="toc-number">3.0.3.</span> <span class="toc-text">（3）在相应的部件中，复位信号的设计都是同步复位，这与 P3 中的设计要求不同。请对比同步复位与异步复位这两种方式的 reset 信号与 clk 信号优先级的关系。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%884%EF%BC%89C-%E8%AF%AD%E8%A8%80%E6%98%AF%E4%B8%80%E7%A7%8D%E5%BC%B1%E7%B1%BB%E5%9E%8B%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80%E3%80%82C-%E8%AF%AD%E8%A8%80%E4%B8%AD%E4%B8%8D%E5%AF%B9%E8%AE%A1%E7%AE%97%E7%BB%93%E6%9E%9C%E6%BA%A2%E5%87%BA%E8%BF%9B%E8%A1%8C%E5%A4%84%E7%90%86%EF%BC%8C%E8%BF%99%E6%84%8F%E5%91%B3%E7%9D%80-C-%E8%AF%AD%E8%A8%80%E8%A6%81%E6%B1%82%E7%A8%8B%E5%BA%8F%E5%91%98%E5%BF%85%E9%A1%BB%E5%BE%88%E6%B8%85%E6%A5%9A%E8%AE%A1%E7%AE%97%E7%BB%93%E6%9E%9C%E6%98%AF%E5%90%A6%E4%BC%9A%E5%AF%BC%E8%87%B4%E6%BA%A2%E5%87%BA%E3%80%82%E5%9B%A0%E6%AD%A4%EF%BC%8C%E5%A6%82%E6%9E%9C%E4%BB%85%E4%BB%85%E6%94%AF%E6%8C%81-C-%E8%AF%AD%E8%A8%80%EF%BC%8CMIPS-%E6%8C%87%E4%BB%A4%E7%9A%84%E6%89%80%E6%9C%89%E8%AE%A1%E7%AE%97%E6%8C%87%E4%BB%A4%E5%9D%87%E5%8F%AF%E4%BB%A5%E5%BF%BD%E7%95%A5%E6%BA%A2%E5%87%BA%E3%80%82-%E8%AF%B7%E8%AF%B4%E6%98%8E%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E5%BF%BD%E7%95%A5%E6%BA%A2%E5%87%BA%E7%9A%84%E5%89%8D%E6%8F%90%E4%B8%8B%EF%BC%8Caddi-%E4%B8%8E-addiu-%E6%98%AF%E7%AD%89%E4%BB%B7%E7%9A%84%EF%BC%8Cadd-%E4%B8%8E-addu-%E6%98%AF%E7%AD%89%E4%BB%B7%E7%9A%84%E3%80%82%E6%8F%90%E7%A4%BA%EF%BC%9A%E9%98%85%E8%AF%BB%E3%80%8AMIPS32%C2%AE-Architecture-For-Programmers-Volume-II-The-MIPS32%C2%AE-Instruction-Set%E3%80%8B%E4%B8%AD%E7%9B%B8%E5%85%B3%E6%8C%87%E4%BB%A4%E7%9A%84-Operation-%E9%83%A8%E5%88%86%E3%80%82"><span class="toc-number">3.0.4.</span> <span class="toc-text">（4）C 语言是一种弱类型程序设计语言。C 语言中不对计算结果溢出进行处理，这意味着 C 语言要求程序员必须很清楚计算结果是否会导致溢出。因此，如果仅仅支持 C 语言，MIPS 指令的所有计算指令均可以忽略溢出。 请说明为什么在忽略溢出的前提下，addi 与 addiu 是等价的，add 与 addu 是等价的。提示：阅读《MIPS32® Architecture For Programmers Volume II: The MIPS32® Instruction Set》中相关指令的 Operation 部分。</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/2344/" title="算法——快速运算"><img src="https://s1.ax1x.com/2023/01/26/pSN7D5F.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="算法——快速运算"/></a><div class="content"><a class="title" href="/posts/2344/" title="算法——快速运算">算法——快速运算</a><time datetime="2023-01-26T15:30:23.000Z" title="发表于 2023-01-26 23:30:23">2023-01-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/39608/" title="MIPS微系统设计注意事项"><img src="https://s1.ax1x.com/2023/01/05/pSka3h6.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIPS微系统设计注意事项"/></a><div class="content"><a class="title" href="/posts/39608/" title="MIPS微系统设计注意事项">MIPS微系统设计注意事项</a><time datetime="2023-01-05T03:21:21.000Z" title="发表于 2023-01-05 11:21:21">2023-01-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/14079/" title="中断支持流水线CPU设计文档（Verilog）"><img src="https://s1.ax1x.com/2023/01/04/pSF8k1s.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="中断支持流水线CPU设计文档（Verilog）"/></a><div class="content"><a class="title" href="/posts/14079/" title="中断支持流水线CPU设计文档（Verilog）">中断支持流水线CPU设计文档（Verilog）</a><time datetime="2023-01-04T05:59:22.000Z" title="发表于 2023-01-04 13:59:22">2023-01-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/47414/" title="中断支持流水线CPU全自动测试思路（Verilog）"><img src="https://s1.ax1x.com/2023/01/04/pSFKZnS.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="中断支持流水线CPU全自动测试思路（Verilog）"/></a><div class="content"><a class="title" href="/posts/47414/" title="中断支持流水线CPU全自动测试思路（Verilog）">中断支持流水线CPU全自动测试思路（Verilog）</a><time datetime="2023-01-04T04:24:24.000Z" title="发表于 2023-01-04 12:24:24">2023-01-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/33345/" title="流水线设计与添加指令经验总结"><img src="https://s1.ax1x.com/2023/01/03/pSPvHhR.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="流水线设计与添加指令经验总结"/></a><div class="content"><a class="title" href="/posts/33345/" title="流水线设计与添加指令经验总结">流水线设计与添加指令经验总结</a><time datetime="2023-01-03T03:08:10.000Z" title="发表于 2023-01-03 11:08:10">2023-01-03</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By ForeverYolo</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script src="/js/jquery.js"></script><script src="/js/foot.js"></script><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.8" zIndex="-1" count="150" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="true" data-text="青青子衿，悠悠我心。,纵我不往，子宁不嗣音？,青青子佩，悠悠我思。,纵我不往，子宁不来？,挑兮达兮，在城阙兮。,一日不见，如三月兮。,野有蔓草，零露漙兮。,有美一人，清扬婉兮。,邂逅相遇，适我愿兮。,野有蔓草，零露瀼瀼。,有美一人，婉如清扬。,邂逅相遇，与子偕臧。,没啦！别点啦!要循环啦!" data-fontsize="20px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
