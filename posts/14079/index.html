@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://s1.ax1x.com/2023/01/04/pSF8k1s.jpg">
 <meta property="article:published_time" content="2023-01-04T05:59:22.000Z">
-<meta property="article:modified_time" content="2023-01-26T16:40:08.388Z">
+<meta property="article:modified_time" content="2023-01-26T17:06:31.393Z">
 <meta property="article:author" content="ForeverYolo">
 <meta property="article:tag" content="北航计算机组成-P7">
 <meta name="twitter:card" content="summary">
@@ -57,7 +57,7 @@
   isHome: false,
   isHighlightShrink: false,
   isToc: true,
-  postUpdate: '2023-01-27 00:40:08'
+  postUpdate: '2023-01-27 01:06:31'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -148,36 +148,1817 @@
     detectApple()
     })(window)</script><link rel="stylesheet" href="/css/iconfont.css"><link rel="stylesheet" href="/css/myStyle.css"><link rel="stylesheet" href="/css/myIco.css"><script defer src="/live2d-widget-master/autoload.js"></script><!-- hexo injector head_end start -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
-<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s1.ax1x.com/2023/01/04/pSF8k1s.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">中断支持流水线CPU设计文档（Verilog）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-04T05:59:22.000Z" title="发表于 2023-01-04 13:59:22">2023-01-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-01-26T16:40:08.388Z" title="更新于 2023-01-27 00:40:08">2023-01-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%8C%97%E8%88%AA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90/">北航计算机组成</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>20分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="中断支持流水线CPU设计文档（Verilog）"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong><font size = 5><center>Verilog 异常中断支持流水线CPU设计文档</center></font></strong></p>
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s1.ax1x.com/2023/01/04/pSF8k1s.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">中断支持流水线CPU设计文档（Verilog）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-04T05:59:22.000Z" title="发表于 2023-01-04 13:59:22">2023-01-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-01-26T17:06:31.393Z" title="更新于 2023-01-27 01:06:31">2023-01-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%8C%97%E8%88%AA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90/">北航计算机组成</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>20分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="中断支持流水线CPU设计文档（Verilog）"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong><font size = 5><center>Verilog 异常中断支持流水线CPU设计文档</center></font></strong></p>
 <h1 id="CPU设计方案综述"><a href="#CPU设计方案综述" class="headerlink" title="CPU设计方案综述"></a>CPU设计方案综述</h1><h2 id="总体设计综述"><a href="#总体设计综述" class="headerlink" title="总体设计综述"></a>总体设计综述</h2><p>使用Verilog开发一个流水线CPU,总体概述如下：<br>1.此流水线CPU为32位CPU<br>2.此CPU为流水线设计<br>3.此CPU支持的指令集为:{add,sub,and,or,slt,sltu,addi,andi,ori,lb,lh,lw,sb,sh,sw,mult,multu,div,divu,mfhi,mflo,mthi,mtlo,beq,bne,lui,jal,jr,nop,mtc0,mfc0,syscall}<br>4.nop的机器码为0x0000000<br>5.该CPU支持对来自计数器和外部的中断进行处理<br>6，该CPU支持对于部分异常进行处理，例如字不对齐，存取位置异常，溢出异常等</p>
-<h2 id="关键模块定义"><a href="#关键模块定义" class="headerlink" title="关键模块定义"></a>关键模块定义</h2><h3 id="IM-外置"><a href="#IM-外置" class="headerlink" title="IM(外置)"></a>IM(外置)</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>| 1  |i_inst_addr[31:0] | I | 需要进行取指操作的流水级 PC（一般为 F 级） |<br>| 2  |i_inst_rdata[31:0]| I | i_inst_addr 对应的 32 位指令 |<br>| 3  | reset | I | 复位信号 |<br>| 4  | clk | I | 时钟信号 |</p>
-<p>（2）功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>| 1 | 取指 | 利用PC取出对应位置处的指令 |</p>
-<h3 id="F-PC"><a href="#F-PC" class="headerlink" title="F_PC"></a>F_PC</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>| 1  | NPC[31:0] | I | 下一个PC值 |<br>| 2  | CLK | I | 时钟信号 |<br>| 3  | RESET | I | 复位信号 |<br>| 4  | PC[31:0] | O | 当前PC值 |</p>
-<p>（2）功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>| 1 | 更改PC值 | 利用NPC更改PC值 |</p>
-<h3 id="D-GRF"><a href="#D-GRF" class="headerlink" title="D_GRF"></a>D_GRF</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>| 1 | A1[4:0] | I | 5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD1 |<br>| 2 | A2[4:0] | I | 5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD2 |<br>| 3 | A3[4:0] | I | 5位地址输入信号，指定32个寄存器中的一个，将其作为RD的写入地址 |<br>| 4 | WD[31:0] | I | 32位写入数据 |<br>| 5 | PC[31:0] | I | 当前PC值 |<br>| 6 | RD1[31:0] | O | A1指定寄存器的32位数据 |<br>| 7 | RD2[31:0] | O | A2指定寄存器的32位数据 |<br>| 8 | CLK | I | 时钟信号 |<br>| 9 | WE | I | 写使能信号 |<br>| 10 | RESET | I | 同步复位信号，清零32个寄存器中的数据 |</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>| 1 | 同步复位 | 时钟上升沿到来时，若RESET信号有效，则将32个寄存器中的数据全部清除 |<br>| 2 | 读出数据 | 将A1与A2所存地址对应的寄存器的数据读出到RD1和RD2|<br>| 3 | 写入数据 | 当WE有效且时钟上升沿到来时，将WD写入到A3所存地址对应的寄存器中|<br>|4|转发数据|当A3\==A2或A3\==A1且WE有效，A3!=0时，将WD中的数据作为RD1或RD2的输出</p>
-<h3 id="IF-ID-REG"><a href="#IF-ID-REG" class="headerlink" title="IF_ID_REG"></a>IF_ID_REG</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|clk|I|时钟信号|<br>|2|reset|I|同步复位信号|<br>|3|WE|I|写使能信号|<br>|4|IF_Instr[31:0]|I|IF阶段机器码<br>|5|IF_PC[31:0]|I|IF阶段PC值<br>|6|ID_Instr[31:0]|O|ID阶段机器码<br>|7|ID_PC[31:0]|O|ID阶段PC值<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|记忆功能|ID阶段存储执行命令所需要的所有内容</p>
-<h3 id="Control"><a href="#Control" class="headerlink" title="Control"></a>Control</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|Instr[31:0]|I|当前指令|<br>|3|ExtendSign|O|扩展类型信号|<br>|4|Jal_sign|O|跳转信号|<br>|5|RegWrite|O|寄存器写使能信号|<br>|6|MemWrite|O|DM写使能信号|<br>|7|MemToReg[2:0]|O|Reg写入数据类型信号|<br>|8|RegDest[4:0]|O|A3寄存器选择信号|<br>|9|ALUop[3:0]|O|ALU功能选择信号|<br>|10|Beq_sign|O|分支信号|<br>|11|Jr_sign|O|Jr信号|<br>|12|RegSrc|O|ALU数据来源选择信号|<br>|13|imm16[15:0]|O|16位立即数|<br>|14|imm26[25:0]|O|26位立即数|<br>|15|rs[4:0]|O|rs寄存器编号|<br>|16|rt[4:0]|O|rt寄存器编号|<br>|17|rd[4:0]|O|rd寄存器编号|<br>|18|load|O|是否为lw指令|<br>|19|store|O|是否为sw指令|<br>|20|cal_r|O|是否为cal_r类指令|<br>|21|cal_i|O|是否为cal_i类指令|<br>|22|jal|O|是否为jal指令|</p>
-<p>(2)真值表<br>|  端口   | add | sub | ori | lw|sw|lui|beq|Jal|Jr|<br>|  :——:  | :——:  | :——: |:——: |:——: |:——: |:——: |:——: |:——: |:——: |<br>|OP|000000|000000|001101|100011|101011|001111|000100|000011|000000|<br>|FC|100000|100010|x|x|x|x|x|x|001000|<br>|ALUop|0000|0001|0011|0000|0000|0100|0000|0000|0000|<br>|Jump|0|0|0|0|0|0|0|1|0|<br>|RegWrite|1|1|1|1|0|1|0|1|0|<br>|MemWrite|0|0|0|0|1|0|0|0|0|<br>|MemToReg|00|00|00|01|00|00|00|10|00|<br>|RegDest|01|01|00|00|00|00|00|10|00|<br>|RegSrc|0|0|1|1|1|1|0|0|0|<br>|Branch|0|0|0|0|0|0|1|0|0|<br>|Jreg|0|0|0|0|0|0|0|0|1|</p>
-<h3 id="D-CMP"><a href="#D-CMP" class="headerlink" title="D_CMP"></a>D_CMP</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|A[31:0]|I|操作数A|<br>|2|B[31:0]|I|操作数B|<br>|3|Equal|O|A==B？1：0<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|比较|比较操作数A与B是否相等，相等则Equal有效|</p>
-<h3 id="D-NPC"><a href="#D-NPC" class="headerlink" title="D_NPC"></a>D_NPC</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|F_PC[31:0]|I|IF阶段的PC值|<br>|2|D_PC[31:0]|I|ID阶段的PC值|<br>|3|Beq_sign|I|是否为Beq指令|<br>|4|Jal_sign|I|是否为Jal指令|<br>|5|Jr_sign|I|是否为Jr指令|<br>|6|Jal_imm26[25:0]|I|26位立即数|<br>|7|D_GRF_Jr[31:0]|I|Jr目标寄存器数据|<br>|8|Beq_imm16[15:0]|I|16位立即数|<br>|9|Equal|I|D_CMP两操作数是否相等|<br>|10|NPC[31:0]|O|PC的下一值|<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|计算下一PC的值|根据指令和当前PC值计算下一PC值|</p>
-<h3 id="D-EXT"><a href="#D-EXT" class="headerlink" title="D_EXT"></a>D_EXT</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|i16[15:0]|I|16位立即数<br>|2|i32[31:0]|O|经过扩展后的32位立即数<br>|3|ExtendSign|I|选择扩展类型信号  0：符号扩展 1：无符号扩展|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|符号扩展|将16位立即数符号扩展为32位立即数|<br>|2|无符号扩展|将16位立即数无符号扩展为32位立即数|</p>
-<h3 id="ID-EX-REG"><a href="#ID-EX-REG" class="headerlink" title="ID_EX_REG"></a>ID_EX_REG</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|ID_Instr[31:0]|I|ID阶段机器码|<br>|2|D_RD1[31:0]|I|ID阶段有效数据|<br>|3|D_RD2[31:0]|I|ID阶段有效数据|<br>|4|D_imm32[31:0]|I|ID阶段32位立即数|<br>|5|ID_PC[31:0]|I|ID阶段PC值|<br>|6|clk|I|时钟信号|<br>|7|reset|I|复位信号|<br>|8|WE|I|写使能信号|<br>|9|EX_Instr[31:0]|O|EX阶段机器码|<br>|10|EX_RD1[31:0]|O|EX阶段有效数据|<br>|11|EX_RD2[31:0]|O|EX阶段有效数据|<br>|12|EX_imm32[31:0]|O|EX阶段32位立即数|<br>|13|EX_PC[31:0]|O|EX阶段PC值|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|记忆功能|EX阶段存储执行命令所需要的所有内容|</p>
-<h3 id="E-ALU"><a href="#E-ALU" class="headerlink" title="E_ALU"></a>E_ALU</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|SrcA[31:0]|I|操作数1|<br>|2|SrcB[31:0]|I|操作数2|<br>|3|ALUControl[3:0]|I|ALU功能选择信号<br>|5|Res[31:0]|O|运算结果|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|判断两个操作数是否相等|相等则Bigger输出1否则为0|<br>|2|加运算|res=SrcA+SrcB|<br>|3|减运算|res=SrcA-SrcB|<br>|4|与运算|res=SrcA$SrcB|<br>|5|或运算|res=SrcB|SrcB|<br>|6|加载高位运算|res={SrcB[15:0],16’h0}|</p>
-<h3 id="E-MDU"><a href="#E-MDU" class="headerlink" title="E_MDU"></a>E_MDU</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|clk|I|时钟信号|<br>|2|reset|I|复位信号|<br>|3|SrcA[31:0]|I|操作数A|<br>|4|SrcB[31:0]|I|操作数B|<br>|5|start|I|开始信号|<br>|6|MDUop[2:0]|I|MDU功能选择信号|<br>|7|HIWrite|I|HI寄存器写使能信号|<br>|8|LOWrite|I|LO寄存器写使能信号|<br>|9|HIRead|I|读HI寄存器信号|<br>|10|LORead|I|读LO寄存器信号|<br>|11|HI[31:0]|O|HI寄存器|<br>|12|LO[31:0]|O|LO寄存器|<br>|13|busy|O|MDU模块忙信号|<br>|14|MDU_res[31:0]|O|MDU结果信号|<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|无符号乘|{HI_temp,LO_temp} = SrcA <em> SrcB|<br>|2|符号乘|{HI_temp,LO_temp} = $signed(SrcA) </em> $signed(SrcB)|<br>|3|符号除|HI = $signed(SrcA) % $signed(SrcB) |<br>|3|符号除|LO = $signed(SrcA) \ $signed(SrcB) |<br>|4|无符号除|HI = SrcA % SrcB|<br>|4|无符号除|LO = SrcA \ SrcB|<br>|5|读写HI寄存器|mfhi读，mthi写|<br>|6|读写LO寄存器|mflo读，mflo写|</p>
-<h3 id="EX-MEM-REG"><a href="#EX-MEM-REG" class="headerlink" title="EX_MEM_REG"></a>EX_MEM_REG</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|EX_Instr[31:0]|I|EX阶段机器码|<br>|2|E_ALU_Result[31:0]|I|EX阶段ALU结果数据|<br>|3|EX_RD2[31:0]|I|EX阶段有效数据|<br>|4|EX_PC[31:0]|I|EX阶段PC值|<br>|5|clk|I|时钟信号|<br>|6|reset|I|复位信号|<br>|7|WE|I|写使能信号|<br>|8|MEM_Instr[31:0]|O|MEM阶段机器码|<br>|9|MEM_ALU_Result[31:0]|O|MEM阶段ALU结果数据|<br>|10|MEM_RD2[31:0]|O|MEM阶段有效数据|<br>|11|MEM_PC[31:0]|O|MEM阶段PC值|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|记忆功能|MEM阶段存储执行命令所需要的所有内容|</p>
-<h3 id="DM（外置）"><a href="#DM（外置）" class="headerlink" title="DM（外置）"></a>DM（外置）</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|m_data_addr[31:0]|I|32位地址输入|<br>|2|m_data_rdata[31:0]|O|32位数据输出|<br>|3|m_data_wdata[31:0]|I|32位数据输入|<br>|4|m_inst_addr[31:0]|I|M级PC值|<br>|5|RESET|I|同步复位信号|<br>|6|CLK|I|时钟信号|<br>|7|m_inst_byteen[3:0]|I|字节使能信号|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|写入数据|当时钟上升沿到来时，根据字节使能信号中的有效位将WD中的数据写入到A所存地址所对应的位处|<br>|2|读出数据|将A所存地址对应位置的数据读出到RD|</p>
-<h3 id="M-CP0"><a href="#M-CP0" class="headerlink" title="M_CP0"></a>M_CP0</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|clk|I|时钟信号|<br>|2|reset|I|同步复位信号|<br>|3|en|I|写使能信号|<br>|4|CP0Add[4:0]|I|寄存器选择信号|<br>|5|CP0In[31:0]|I|读入数据|<br>|6|CP0Out[31:0]|O|读出数据|<br>|7|VPC[31:0]|I|受害PC|<br>|8|BDIn|I|延迟槽指令信号|<br>|9|ExcCodeIn[4:0]|I|异常类型|<br>|10|HWInt[5:0]|I|中断信号输入|<br>|11|EXLClr|I|EXL复位信号|<br>|12|EPCOut[31:0]|O|EPC值|<br>|13|Req|O|进入处理程序请求|<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|配置异常|根据EXL Cause SR信号不同位决定中断能否产生|<br>|2|记录异常|利用SR Cause EPC记录异常信息|</p>
-<h3 id="M-BE"><a href="#M-BE" class="headerlink" title="M_BE"></a>M_BE</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|A[1:0]|I|DM地址的低两位|<br>|2|Din[31:0]|I|DM读出数据|<br>|3|Op[2:0]|I|BE功能选择|<br>|4|Dout[31:0]|O|BE数据输出|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|处理DM数据|根据A和OP处理数据，使其符合指令行为|</p>
-<h3 id="MEM-WB-REG"><a href="#MEM-WB-REG" class="headerlink" title="MEM_WB_REG"></a>MEM_WB_REG</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|MEM_Instr[31:0]|I|MEM阶段机器码|<br>|2|MEM_ALU_Result[31:0]|I|MEM阶段ALU结果数据|<br>|3|MEM_DM_RD[31:0]|I|MEM阶段DM读出数据|<br>|4|MEM_PC[31:0]|I|MEM阶段PC值|<br>|5|clk|I|时钟信号|<br>|6|reset|I|复位信号|<br>|7|WE|I|写使能信号|<br>|8|WB_Instr[31:0]|O|WB阶段机器码|<br>|9|WB_ALU_Result[31:0]|O|WB阶段ALU结果数据|<br>|10|WB_DM_RD[31:0]|O|WB阶段DM读出数据|<br>|11|WB_PC[31:0]|O|WB阶段PC值|</p>
-<p>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|记忆功能|WB阶段存储执行命令所需要的所有内容|</p>
-<h3 id="Stall"><a href="#Stall" class="headerlink" title="Stall"></a>Stall</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|D_Instr[31:0]|I|ID阶段机器码|<br>|2|E_Instr[31:0]|I|EX阶段机器码|<br>|3|M_Instr[31:0]|I|MEM阶段机器码|<br>|4|Stall|O|阻塞信号|<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|阻塞功能|判断当前流水线是否需要在ID阶段阻塞|<br>(3)判断方法——AT法<br>|  指令   | rsTuse | rtTuse |<br>|  :——:  | :——:  | :——: |<br>|add|1|1|<br>|sub|1|1|<br>|and|1|1|<br>|or|1|1|<br>|slt|1|1|<br>|sltu|1|1|<br>|addi|1|-|<br>|andi|1|-|<br>|ori|1|-|<br>|lb|1|-|<br>|lh|1|-|<br>|lw|1|-|<br>|sb|1|2|<br>|sh|1|2|<br>|sw|1|2|<br>|beq|0|0|<br>|bne|0|0|<br>|mult|1|1|<br>|multu|1|1|<br>|div|1|1|<br>|divu|1|1|<br>|mthi|1|-|<br>|mtlo|1|-|<br>|lui|-|-|<br>|jal|-|-|<br>|jr|0|-|<br>|mtc0|2|0|</p>
+<h2 id="关键模块定义"><a href="#关键模块定义" class="headerlink" title="关键模块定义"></a>关键模块定义</h2><h3 id="IM-外置"><a href="#IM-外置" class="headerlink" title="IM(外置)"></a>IM(外置)</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">i_inst_addr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">需要进行取指操作的流水级 PC（一般为 F 级）</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">i_inst_rdata[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">i_inst_addr 对应的 32 位指令</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>（2）功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">取指</td>
+<td style="text-align:center">利用PC取出对应位置处的指令</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="F-PC"><a href="#F-PC" class="headerlink" title="F_PC"></a>F_PC</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">NPC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">下一个PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">CLK</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">RESET</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">PC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">当前PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>（2）功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">更改PC值</td>
+<td style="text-align:center">利用NPC更改PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="D-GRF"><a href="#D-GRF" class="headerlink" title="D_GRF"></a>D_GRF</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A1[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD1</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">A2[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">5位地址输入信号，指定32个寄存器中的一个，将其中存储的数据读出到RD2</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">A3[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">5位地址输入信号，指定32个寄存器中的一个，将其作为RD的写入地址</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">WD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">32位写入数据</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">当前PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">RD1[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A1指定寄存器的32位数据</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">RD2[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A2指定寄存器的32位数据</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">CLK</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">RESET</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号，清零32个寄存器中的数据</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">同步复位</td>
+<td style="text-align:center">时钟上升沿到来时，若RESET信号有效，则将32个寄存器中的数据全部清除</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">读出数据</td>
+<td style="text-align:center">将A1与A2所存地址对应的寄存器的数据读出到RD1和RD2</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">写入数据</td>
+<td style="text-align:center">当WE有效且时钟上升沿到来时，将WD写入到A3所存地址对应的寄存器中</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">转发数据</td>
+<td style="text-align:center">当A3\==A2或A3\==A1且WE有效，A3!=0时，将WD中的数据作为RD1或RD2的输出</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="IF-ID-REG"><a href="#IF-ID-REG" class="headerlink" title="IF_ID_REG"></a>IF_ID_REG</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">IF_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">IF阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">IF_PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">IF阶段PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">ID_Instr[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">ID阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">ID_PC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">ID阶段PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">记忆功能</td>
+<td style="text-align:center">ID阶段存储执行命令所需要的所有内容</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Control"><a href="#Control" class="headerlink" title="Control"></a>Control</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">当前指令</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">ExtendSign</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">扩展类型信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">Jal_sign</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">跳转信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">RegWrite</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">寄存器写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">MemWrite</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">DM写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">MemToReg[2:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">Reg写入数据类型信号</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">RegDest[4:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A3寄存器选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">ALUop[3:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">ALU功能选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">Beq_sign</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">分支信号</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">Jr_sign</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">Jr信号</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">RegSrc</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">ALU数据来源选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">13</td>
+<td style="text-align:center">imm16[15:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">16位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">14</td>
+<td style="text-align:center">imm26[25:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">26位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">15</td>
+<td style="text-align:center">rs[4:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">rs寄存器编号</td>
+</tr>
+<tr>
+<td style="text-align:center">16</td>
+<td style="text-align:center">rt[4:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">rt寄存器编号</td>
+</tr>
+<tr>
+<td style="text-align:center">17</td>
+<td style="text-align:center">rd[4:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">rd寄存器编号</td>
+</tr>
+<tr>
+<td style="text-align:center">18</td>
+<td style="text-align:center">load</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">是否为lw指令</td>
+</tr>
+<tr>
+<td style="text-align:center">19</td>
+<td style="text-align:center">store</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">是否为sw指令</td>
+</tr>
+<tr>
+<td style="text-align:center">20</td>
+<td style="text-align:center">cal_r</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">是否为cal_r类指令</td>
+</tr>
+<tr>
+<td style="text-align:center">21</td>
+<td style="text-align:center">cal_i</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">是否为cal_i类指令</td>
+</tr>
+<tr>
+<td style="text-align:center">22</td>
+<td style="text-align:center">jal</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">是否为jal指令</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)真值表</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">端口</th>
+<th style="text-align:center">add</th>
+<th style="text-align:center">sub</th>
+<th style="text-align:center">ori</th>
+<th style="text-align:center">lw</th>
+<th style="text-align:center">sw</th>
+<th style="text-align:center">lui</th>
+<th style="text-align:center">beq</th>
+<th style="text-align:center">Jal</th>
+<th style="text-align:center">Jr</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">OP</td>
+<td style="text-align:center">000000</td>
+<td style="text-align:center">000000</td>
+<td style="text-align:center">001101</td>
+<td style="text-align:center">100011</td>
+<td style="text-align:center">101011</td>
+<td style="text-align:center">001111</td>
+<td style="text-align:center">000100</td>
+<td style="text-align:center">000011</td>
+<td style="text-align:center">000000</td>
+</tr>
+<tr>
+<td style="text-align:center">FC</td>
+<td style="text-align:center">100000</td>
+<td style="text-align:center">100010</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">x</td>
+<td style="text-align:center">001000</td>
+</tr>
+<tr>
+<td style="text-align:center">ALUop</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0001</td>
+<td style="text-align:center">0011</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0100</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0000</td>
+<td style="text-align:center">0000</td>
+</tr>
+<tr>
+<td style="text-align:center">Jump</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">RegWrite</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">MemWrite</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">MemToReg</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">01</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">10</td>
+<td style="text-align:center">00</td>
+</tr>
+<tr>
+<td style="text-align:center">RegDest</td>
+<td style="text-align:center">01</td>
+<td style="text-align:center">01</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">00</td>
+<td style="text-align:center">10</td>
+<td style="text-align:center">00</td>
+</tr>
+<tr>
+<td style="text-align:center">RegSrc</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">Branch</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">Jreg</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="D-CMP"><a href="#D-CMP" class="headerlink" title="D_CMP"></a>D_CMP</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数A</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">B[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数B</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">Equal</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">A==B？1：0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">比较</td>
+<td style="text-align:center">比较操作数A与B是否相等，相等则Equal有效</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="D-NPC"><a href="#D-NPC" class="headerlink" title="D_NPC"></a>D_NPC</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">F_PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">IF阶段的PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">D_PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段的PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">Beq_sign</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">是否为Beq指令</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">Jal_sign</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">是否为Jal指令</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">Jr_sign</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">是否为Jr指令</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">Jal_imm26[25:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">26位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">D_GRF_Jr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">Jr目标寄存器数据</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">Beq_imm16[15:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">16位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">Equal</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">D_CMP两操作数是否相等</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">NPC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">PC的下一值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">计算下一PC的值</td>
+<td style="text-align:center">根据指令和当前PC值计算下一PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="D-EXT"><a href="#D-EXT" class="headerlink" title="D_EXT"></a>D_EXT</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">i16[15:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">16位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">i32[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">经过扩展后的32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">ExtendSign</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">选择扩展类型信号  0：符号扩展 1：无符号扩展</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">符号扩展</td>
+<td style="text-align:center">将16位立即数符号扩展为32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">无符号扩展</td>
+<td style="text-align:center">将16位立即数无符号扩展为32位立即数</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="ID-EX-REG"><a href="#ID-EX-REG" class="headerlink" title="ID_EX_REG"></a>ID_EX_REG</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">ID_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">D_RD1[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段有效数据</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">D_RD2[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段有效数据</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">D_imm32[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">ID_PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">EX_Instr[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EX阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">EX_RD1[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EX阶段有效数据</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">EX_RD2[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EX阶段有效数据</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">EX_imm32[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EX阶段32位立即数</td>
+</tr>
+<tr>
+<td style="text-align:center">13</td>
+<td style="text-align:center">EX_PC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EX阶段PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">记忆功能</td>
+<td style="text-align:center">EX阶段存储执行命令所需要的所有内容</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="E-ALU"><a href="#E-ALU" class="headerlink" title="E_ALU"></a>E_ALU</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">SrcA[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数1</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">SrcB[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数2</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">ALUControl[3:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ALU功能选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">Res[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">运算结果</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">判断两个操作数是否相等</td>
+<td style="text-align:center">相等则Bigger输出1否则为0</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">加运算</td>
+<td style="text-align:center">res=SrcA+SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">减运算</td>
+<td style="text-align:center">res=SrcA-SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">与运算</td>
+<td style="text-align:center">res=SrcA$SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">或运算</td>
+<td style="text-align:center">res=SrcB或SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">加载高位运算</td>
+<td style="text-align:center">res={SrcB[15:0],16’h0}</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="E-MDU"><a href="#E-MDU" class="headerlink" title="E_MDU"></a>E_MDU</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">SrcA[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数A</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">SrcB[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">操作数B</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">start</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">开始信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">MDUop[2:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MDU功能选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">HIWrite</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">HI寄存器写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">LOWrite</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">LO寄存器写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">HIRead</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">读HI寄存器信号</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">LORead</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">读LO寄存器信号</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">HI[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">HI寄存器</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">LO[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">LO寄存器</td>
+</tr>
+<tr>
+<td style="text-align:center">13</td>
+<td style="text-align:center">busy</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MDU模块忙信号</td>
+</tr>
+<tr>
+<td style="text-align:center">14</td>
+<td style="text-align:center">MDU_res[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MDU结果信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">无符号乘</td>
+<td style="text-align:center">{HI_temp,LO_temp} = SrcA * SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">符号乘</td>
+<td style="text-align:center">{HI_temp,LO_temp} = $signed(SrcA) * $signed(SrcB)</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">符号除</td>
+<td style="text-align:center">HI = $signed(SrcA) % $signed(SrcB)</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">符号除</td>
+<td style="text-align:center">LO = $signed(SrcA) \ $signed(SrcB)</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">无符号除</td>
+<td style="text-align:center">HI = SrcA % SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">无符号除</td>
+<td style="text-align:center">LO = SrcA \ SrcB</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">读写HI寄存器</td>
+<td style="text-align:center">mfhi读，mthi写</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">读写LO寄存器</td>
+<td style="text-align:center">mflo读，mflo写</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="EX-MEM-REG"><a href="#EX-MEM-REG" class="headerlink" title="EX_MEM_REG"></a>EX_MEM_REG</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">EX_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EX阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">E_ALU_Result[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EX阶段ALU结果数据</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">EX_RD2[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EX阶段有效数据</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">EX_PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EX阶段PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">MEM_Instr[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MEM阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">MEM_ALU_Result[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MEM阶段ALU结果数据</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">MEM_RD2[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MEM阶段有效数据</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">MEM_PC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MEM阶段PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">记忆功能</td>
+<td style="text-align:center">MEM阶段存储执行命令所需要的所有内容</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="DM（外置）"><a href="#DM（外置）" class="headerlink" title="DM（外置）"></a>DM（外置）</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">m_data_addr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">32位地址输入</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">m_data_rdata[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">32位数据输出</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">m_data_wdata[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">32位数据输入</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">m_inst_addr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">M级PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">RESET</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">CLK</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">m_inst_byteen[3:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">字节使能信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">写入数据</td>
+<td style="text-align:center">当时钟上升沿到来时，根据字节使能信号中的有效位将WD中的数据写入到A所存地址所对应的位处</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">读出数据</td>
+<td style="text-align:center">将A所存地址对应位置的数据读出到RD</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="M-CP0"><a href="#M-CP0" class="headerlink" title="M_CP0"></a>M_CP0</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">en</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">CP0Add[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">寄存器选择信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">CP0In[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">读入数据</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">CP0Out[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">读出数据</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">VPC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">受害PC</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">BDIn</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">延迟槽指令信号</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">ExcCodeIn[4:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">异常类型</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">HWInt[5:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">中断信号输入</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">EXLClr</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EXL复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">EPCOut[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EPC值</td>
+</tr>
+<tr>
+<td style="text-align:center">13</td>
+<td style="text-align:center">Req</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">进入处理程序请求</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">配置异常</td>
+<td style="text-align:center">根据EXL Cause SR信号不同位决定中断能否产生</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">记录异常</td>
+<td style="text-align:center">利用SR Cause EPC记录异常信息</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="M-BE"><a href="#M-BE" class="headerlink" title="M_BE"></a>M_BE</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A[1:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">DM地址的低两位</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">Din[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">DM读出数据</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">Op[2:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">BE功能选择</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">Dout[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">BE数据输出</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">处理DM数据</td>
+<td style="text-align:center">根据A和OP处理数据，使其符合指令行为</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="MEM-WB-REG"><a href="#MEM-WB-REG" class="headerlink" title="MEM_WB_REG"></a>MEM_WB_REG</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">MEM_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MEM阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">MEM_ALU_Result[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MEM阶段ALU结果数据</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">MEM_DM_RD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MEM阶段DM读出数据</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">MEM_PC[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MEM阶段PC值</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">WB_Instr[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">WB阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">WB_ALU_Result[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">WB阶段ALU结果数据</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">WB_DM_RD[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">WB阶段DM读出数据</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">WB_PC[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">WB阶段PC值</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">记忆功能</td>
+<td style="text-align:center">WB阶段存储执行命令所需要的所有内容</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Stall"><a href="#Stall" class="headerlink" title="Stall"></a>Stall</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">D_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">ID阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">E_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EX阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">M_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MEM阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">Stall</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">阻塞信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">阻塞功能</td>
+<td style="text-align:center">判断当前流水线是否需要在ID阶段阻塞</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(3)判断方法——AT法</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">指令</th>
+<th style="text-align:center">rsTuse</th>
+<th style="text-align:center">rtTuse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">add</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">sub</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">and</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">or</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">slt</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">sltu</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">addi</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">andi</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">ori</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">lb</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">lh</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">lw</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">sb</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">2</td>
+</tr>
+<tr>
+<td style="text-align:center">sh</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">2</td>
+</tr>
+<tr>
+<td style="text-align:center">sw</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">2</td>
+</tr>
+<tr>
+<td style="text-align:center">beq</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">bne</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td style="text-align:center">mult</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">multu</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">div</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">divu</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">mthi</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">mtlo</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">lui</td>
+<td style="text-align:center">-</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">jal</td>
+<td style="text-align:center">-</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">jr</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">-</td>
+</tr>
+<tr>
+<td style="text-align:center">mtc0</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">0</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="table-container">
 <table>
 <thead>
@@ -307,8 +2088,269 @@
 </table>
 </div>
 <h4 id="特殊"><a href="#特殊" class="headerlink" title="特殊"></a>特殊</h4><pre><code>Stall_eret = (D_eret) &amp;&amp; ((E_mtc0 &amp;&amp; E_rd == 5&#39;d14) || (M_mtc0 &amp;&amp; M_rd == 5&#39;d14));
-</code></pre><h3 id="Forward"><a href="#Forward" class="headerlink" title="Forward"></a>Forward</h3><p>（1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|E_Instr[31:0]|I|EX阶段机器码|<br>|2|M_Instr[31:0]|I|MEM阶段机器码|<br>|3|W_Instr[31:0]|I|WB阶段机器码|<br>|4|EX_Forward|O|EX阶段数据是否可以转发信号|<br>|5|MEM_Forward|O|MEM阶段数据是否可以转发信号|<br>|6|WB_Forward|O|WB阶段数据是否可以转发信号|<br>（2）功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|转发信号|判断每个阶段是否可以为前面转发数据|</p>
-<h3 id="Bridge"><a href="#Bridge" class="headerlink" title="Bridge"></a>Bridge</h3><p>(1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|PrAddr[31:0]|I|CPU地址输入|<br>|2|PrRD[31:0]|O|读出到CPU的数据|<br>|3|PrWD[31:0]|I|读入到外设的数据|<br>|4|DevAddr[31:0]|O|外设地址|<br>|5|DevWD[31:0]|O|输出到外设的数据|<br>|6|TC1_RD[31:0]|I|来自TC1的数据|<br>|7|TC2_RD[31:0]|I|来自TC2的数据|<br>|8|DM_RD[31:0]|I|来自DM的数据|<br>|9|PrWe|I|桥写使能信号|<br>|10|TC1_WE|O|TC1写使能信号|<br>|11|TC2_WE|O|TC2写使能信号|<br>|12|DM_WE|O|DM写使能信号|<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|信息交换|用于CPU和外设之间的信息交换|<br>19.TC<br>(1）端口说明<br>|  序号   | 信号名 | 方向 | 描述 |<br>|  :——:  | :——:  | :——: | :——: |<br>|1|clk|I|时钟信号|<br>|2|reset|I|同步复位信号|<br>|3|Addr[31:2]|I|地址数据|<br>|4|WE|I|写使能信号|<br>|5|Din[31:0]|I|读入数据|<br>|6|Dout[31:0]|O|读出数据|<br>|7|IRQ|O|计时器中断信号|<br>(2)功能定义<br>|  序号   | 功能 | 描述 |<br>|  :——:  | :——:  | :——: |<br>|1|定时产生中断信号|通过计数模式定期产生中断信号|<br>|2|模式0|计数为0时，若不复位，持续产生IRQ信号|<br>|3|模式1|计数为0时，产生一周期IRQ信号后重新计数|</p>
+</code></pre><h3 id="Forward"><a href="#Forward" class="headerlink" title="Forward"></a>Forward</h3><p>（1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">E_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">EX阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">M_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">MEM阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">W_Instr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">WB阶段机器码</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">EX_Forward</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">EX阶段数据是否可以转发信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">MEM_Forward</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">MEM阶段数据是否可以转发信号</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">WB_Forward</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">WB阶段数据是否可以转发信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>（2）功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">转发信号</td>
+<td style="text-align:center">判断每个阶段是否可以为前面转发数据</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Bridge"><a href="#Bridge" class="headerlink" title="Bridge"></a>Bridge</h3><p>(1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">PrAddr[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">CPU地址输入</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">PrRD[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">读出到CPU的数据</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">PrWD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">读入到外设的数据</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">DevAddr[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">外设地址</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">DevWD[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">输出到外设的数据</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">TC1_RD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">来自TC1的数据</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">TC2_RD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">来自TC2的数据</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">DM_RD[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">来自DM的数据</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">PrWe</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">桥写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">TC1_WE</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">TC1写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">TC2_WE</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">TC2写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">DM_WE</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">DM写使能信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">信息交换</td>
+<td style="text-align:center">用于CPU和外设之间的信息交换</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>19.TC</p>
+<p>(1）端口说明</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">信号名</th>
+<th style="text-align:center">方向</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">clk</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">时钟信号</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">reset</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">同步复位信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">Addr[31:2]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">地址数据</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">WE</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">写使能信号</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">Din[31:0]</td>
+<td style="text-align:center">I</td>
+<td style="text-align:center">读入数据</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">Dout[31:0]</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">读出数据</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">IRQ</td>
+<td style="text-align:center">O</td>
+<td style="text-align:center">计时器中断信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(2)功能定义</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序号</th>
+<th style="text-align:center">功能</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">定时产生中断信号</td>
+<td style="text-align:center">通过计数模式定期产生中断信号</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">模式0</td>
+<td style="text-align:center">计数为0时，若不复位，持续产生IRQ信号</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">模式1</td>
+<td style="text-align:center">计数为0时，产生一周期IRQ信号后重新计数</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h1 id="转发暂停控制"><a href="#转发暂停控制" class="headerlink" title="转发暂停控制"></a>转发暂停控制</h1><h2 id="暂停"><a href="#暂停" class="headerlink" title="暂停"></a>暂停</h2><pre><code>wire Stall_eret = (D_eret) &amp;&amp; ((E_mtc0 &amp;&amp; E_rd == 5&#39;d14) || (M_mtc0 &amp;&amp; M_rd == 5&#39;d14));
 wire Stall_MDU = busy &amp;&amp; ( D_MDU_c || D_MDU_f || D_MDU_t );
 wire Stall_rs_E = (E_RegDest == D_rs) &amp;&amp; (E_RegDest) &amp;&amp; (T_use_rs &lt; T_new_E) &amp;&amp; E_RegWrite;
