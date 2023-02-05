@@ -1,0 +1,269 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>由波动数列对高级语言取模的思考 | ForeverYolo的博客</title><meta name="author" content="ForeverYolo"><meta name="copyright" content="ForeverYolo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="波动数列题目描述观察这个数列：  $$1,3,0,2, - 1,1, - 2$$  这个数列中后一项总是比前一项增加2或者减少3。栋栋对这种数列很好奇，他想知道长度为n或为s而且后一项总是比前一项增加a或者减少b的整数数列可能有多少种呢？ 输入描述输入的第一行包含四个整数n,s,a,b,含义如前面所述，其中： $$1 \le n \le 1000, - {10^{^9}} \le s \le {1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="由波动数列对高级语言取模的思考">
+<meta property="og:url" content="https://foreveryolo.github.io/posts/54458/index.html">
+<meta property="og:site_name" content="ForeverYolo的博客">
+<meta property="og:description" content="波动数列题目描述观察这个数列：  $$1,3,0,2, - 1,1, - 2$$  这个数列中后一项总是比前一项增加2或者减少3。栋栋对这种数列很好奇，他想知道长度为n或为s而且后一项总是比前一项增加a或者减少b的整数数列可能有多少种呢？ 输入描述输入的第一行包含四个整数n,s,a,b,含义如前面所述，其中： $$1 \le n \le 1000, - {10^{^9}} \le s \le {1">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2023/01/28/pSaPd0O.jpg">
+<meta property="article:published_time" content="2023-01-28T09:52:23.000Z">
+<meta property="article:modified_time" content="2023-02-02T15:54:25.227Z">
+<meta property="article:author" content="ForeverYolo">
+<meta property="article:tag" content="高级语言">
+<meta property="article:tag" content="算法学习">
+<meta property="article:tag" content="动态规划">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2023/01/28/pSaPd0O.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://foreveryolo.github.io/posts/54458/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  }
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '由波动数列对高级语言取模的思考',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-02-02 23:54:25'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/iconfont.css"><link rel="stylesheet" href="/css/myStyle.css"><link rel="stylesheet" href="/css/myIco.css"><link rel="stylesheet" href="/css/fontsetting.css"><script defer src="/live2d-widget-master/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">21</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">16</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s1.ax1x.com/2023/01/28/pSaPd0O.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">由波动数列对高级语言取模的思考</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-28T09:52:23.000Z" title="发表于 2023-01-28 17:52:23">2023-01-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-02-02T15:54:25.227Z" title="更新于 2023-02-02 23:54:25">2023-02-02</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%AE%97%E6%B3%95/">算法</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="由波动数列对高级语言取模的思考"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="波动数列"><a href="#波动数列" class="headerlink" title="波动数列"></a>波动数列</h1><h2 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h2><p>观察这个数列：</p>
+
+$$1,3,0,2, - 1,1, - 2$$
+
+<p>这个数列中后一项总是比前一项增加2或者减少3。<br>栋栋对这种数列很好奇，他想知道长度为n或为s而且后一项总是比前一项增加a或者减少b的整数数列可能有多少种呢？</p>
+<h2 id="输入描述"><a href="#输入描述" class="headerlink" title="输入描述"></a>输入描述</h2><p>输入的第一行包含四个整数n,s,a,b,含义如前面所述，其中：</p>
+$$1 \le n \le 1000, - {10^{^9}} \le s \le {10^9},1 \le a,b \le {10^6}$$
+<h2 id="输出描述"><a href="#输出描述" class="headerlink" title="输出描述"></a>输出描述</h2><p>输出一行，包含一个整数，表示满足条件的方案数。由于这个数很大，请输出方案数除以 $ {10^8}{\rm{ + }}7 $ 的余数。</p>
+<h1 id="解题过程"><a href="#解题过程" class="headerlink" title="解题过程"></a>解题过程</h1><h2 id="第一层（10分）"><a href="#第一层（10分）" class="headerlink" title="第一层（10分）"></a>第一层（10分）</h2><h3 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h3><p>考虑极限情况：</p>
+
+$$\eqalign{
+  & {\rm{x,x}} + a,x + 2a,x + 3a,...x + (n - 1)a = nx + {{n(n - 1)} \over 2}a = s  \cr 
+  & x,x - b,x - 2b,x - 3b,...x - (n - 1)b = nx - {{n(n - 1)} \over 2}b = s \cr} $$
+
+<p>一式中x为最小值，二式中x为最大值，由此得到x的范围，进而可以枚举每一个x进行DFS</p>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="type">long</span> <span class="type">long</span> n, s, a, b;</span><br><span class="line"><span class="type">long</span> <span class="type">long</span> ans = <span class="number">0</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> MOD = <span class="number">1000000007</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">dfs</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> cnt, <span class="type">int</span> sum)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (cnt == n)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (sum == s)</span><br><span class="line">		&#123;</span><br><span class="line">			ans++;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (ans &gt; MOD)</span><br><span class="line">		&#123;</span><br><span class="line">			ans %= MOD;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">dfs</span>(x + a, cnt + <span class="number">1</span>, sum + x + a);</span><br><span class="line">	<span class="built_in">dfs</span>(x - b, cnt + <span class="number">1</span>, sum + x - b);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">slove</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> t = n * (n - <span class="number">1</span>) / <span class="number">2</span>;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> x;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> x1 = s / n - a * (n - <span class="number">1</span>) / <span class="number">2</span>;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> x2 = <span class="number">1</span> + s / n + b * (n - <span class="number">1</span>) / <span class="number">2</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> x = x1; x &lt;= x2; x++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">dfs</span>(x, <span class="number">1</span>, x);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cin &gt;&gt; n &gt;&gt; s &gt;&gt; a &gt;&gt; b;</span><br><span class="line">	<span class="built_in">slove</span>();</span><br><span class="line">	cout &lt;&lt; ans &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure> 
+<h2 id="第二层（20分）"><a href="#第二层（20分）" class="headerlink" title="第二层（20分）"></a>第二层（20分）</h2><h3 id="思路-1"><a href="#思路-1" class="headerlink" title="思路"></a>思路</h3><p>对枚举数量进行缩减，将a,b一同看为p,原式合并为：</p>
+
+$${\rm{x,x}} + p,x + 2p,x + 3p,...x + (n - 1)p = nx + {{n(n - 1)} \over 2}p = s$$
+
+<p>所以a,b共有${{n(n - 1)} \over 2}$个，选定x,在DFS前枚举a的个数,如果所有a都不能满足$nx + {t_a}a - ({{n(n - 1)} \over 2} - {t_a})b = s$，则不进行对此x的DFS。</p>
+<h3 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="type">long</span> <span class="type">long</span> n, s, a, b;</span><br><span class="line"><span class="type">long</span> <span class="type">long</span> ans = <span class="number">0</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> MOD = <span class="number">1000000007</span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">dfs</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> cnt, <span class="type">int</span> sum)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (cnt == n)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (sum == s)</span><br><span class="line">		&#123;</span><br><span class="line">			ans++;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (ans &gt; MOD)</span><br><span class="line">		&#123;</span><br><span class="line">			ans %= MOD;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">dfs</span>(x + a, cnt + <span class="number">1</span>, sum + x + a);</span><br><span class="line">	<span class="built_in">dfs</span>(x - b, cnt + <span class="number">1</span>, sum + x - b);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">slove</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> t = n * (n - <span class="number">1</span>) / <span class="number">2</span>;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> x;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> x1 = s / n - a * (n - <span class="number">1</span>) / <span class="number">2</span>;</span><br><span class="line">	<span class="type">long</span> <span class="type">long</span> x2 = <span class="number">1</span> + s / n + b * (n - <span class="number">1</span>) / <span class="number">2</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> x = x1; x &lt;= x2; x++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">for</span> (<span class="type">int</span> cntA = <span class="number">0</span>; cntA &lt;= t; cntA++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="type">long</span> <span class="type">long</span> cal = x * n + cntA * a - (t - cntA) * b;</span><br><span class="line">			<span class="keyword">if</span> (cal == s)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="built_in">dfs</span>(x, <span class="number">1</span>, x);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">Mod</span><span class="params">(<span class="type">int</span> x,<span class="type">int</span> n)</span> </span>&#123; <span class="keyword">return</span> (x % n + n) % n; &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cin &gt;&gt; n &gt;&gt; s &gt;&gt; a &gt;&gt; b;</span><br><span class="line">	<span class="built_in">slove</span>();</span><br><span class="line">	cout &lt;&lt; ans &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure> 
+<h2 id="第三层（100分）"><a href="#第三层（100分）" class="headerlink" title="第三层（100分）"></a>第三层（100分）</h2><h3 id="思路-2"><a href="#思路-2" class="headerlink" title="思路"></a>思路</h3><p>令：</p>
+
+$${{n(n - 1)} \over 2}p = z$$
+
+<p>原式解出x:</p>
+
+$$x = {{s - z} \over n}$$
+
+<p>由于x作为首项，必为整数，所以得到：</p>
+
+$$s = z(\bmod n)$$
+
+<p>即s与z同余。<br>现在我们将p再次转化为f[i]={a,b},原式可写为：<br>
+$$x,x + f[1],x + f[1] + f[2],x + f[1] + f[2] + f[3],...,x + f[1] + ... + f[n - 1]$$
+</p>
+<p>合并后为：</p>
+
+$$nx + (n - 1)f[1] + (n - 2)f[2] + ... + f[n - 1] = s$$
+
+<p>由前面同余的关系，两边取模：</p>
+
+$$( - f[1] - 2f[2]... - f[n - 1])\% n = s\% n$$ 
+
+<p>取反：</p>
+
+$$( f[1] + 2f[2]... + f[n - 1])\% n = (-s)\% n$$ 
+
+<p>因此我们可以对f[1]-f[n-1]进行动态规划：</p>
+
+$$dp[i][j] = dp[i][j - i \times a] + dp[i][j + i \times b]$$
+
+<p>dp[i][j]表示前i项余数为j的组合数。<br>最后我们取dp[n-1][(-s)%n]即可得解。</p>
+<h3 id="问题产生"><a href="#问题产生" class="headerlink" title="问题产生"></a>问题产生</h3><h4 id="取模异常"><a href="#取模异常" class="headerlink" title="取模异常"></a>取模异常</h4><p>笔者在查阅题解时发现题解中对于取模并不是直接取模，而是进行了这样的操作：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">Mod</span><span class="params">(<span class="type">int</span> x)</span> </span></span><br><span class="line"><span class="function"></span>&#123; </span><br><span class="line">    <span class="keyword">return</span> (x % n + n) % n; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure> 
+<p>而使用Python3的选手则是像思路那样直接取模。</p>
+<p>笔者对此十分的不理解，起初认为是忽略了题目的条件，经过几个小时的查阅笔者找到了这样做的理由：与数学取模保持一致/维护数组下标大于0。</p>
+<h4 id="数学取模"><a href="#数学取模" class="headerlink" title="数学取模"></a>数学取模</h4><p>定义：如果a和d是两个自然数，d非零，可以证明存在两个唯一的整数q和r，满足a = qd+r 且（0 &lt;= r &lt; d&gt;。其中，q被称为商,r被称为余数。<br>所以对于（-7）%3,答案应该是2。  </p>
+<p style="color: #FF0000;">但高级语言并不一定为2</p>    
+
+<p>C++：cout&lt;&lt;(-7)%3;//输出为-1    </p>
+<p>Java:System.out.println((-7)%3);//输出为-1      </p>
+<p>Python:print((-7)%3)//输出为2   </p>
+<p>结果让我大跌眼镜，查阅资料得知，C++和Java通常会让<b>商大一点</b>，Python通常会让<b>商小一点</b>。所以C++和Java商为-2.Python为-3，进而导致了结果的不同。 </p>
+<p>所以，为了和我们的认知——数学取模保持一致，我们利用Mod(int x)这个函数让C++的取模和Python和数学取模保持了一致。这也就回答了为什么C++有一种多此一举的感觉。    </p>
+<p>但是其实，从另一个角度想，就算C++不这样取模，难道答案就会错吗？有没有可能这样做只是为了维护下标大于0？<p style="color: #FF0000;">确实会错</p>  </p>
+<p>这是在C++下直接取模（下标同+1000）：</p>
+<p><img src="错误答案.png" alt="错误答案">   </p>
+<p>这是在C++下函数取模：<br><img src="正确答案.png" alt="正确答案"></p>
+<p>所以，做题还是严格按照数学取模来叭</p>
+<h3 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> N=<span class="number">1e3</span>+<span class="number">3</span>,mod=<span class="number">1e8</span>+<span class="number">7</span>;</span><br><span class="line"><span class="type">int</span> n,dp[N][N];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">Mod</span><span class="params">(<span class="type">int</span> x)</span></span>&#123;<span class="keyword">return</span> (x%n+n)%n;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="type">int</span> s,a,b; <span class="built_in">scanf</span>(<span class="string">&quot;%d%d%d%d&quot;</span>,&amp;n,&amp;s,&amp;a,&amp;b);</span><br><span class="line">	dp[<span class="number">0</span>][<span class="number">0</span>]=<span class="number">1</span>;</span><br><span class="line">	<span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">1</span>;i&lt;n;i++)</span><br><span class="line">		<span class="keyword">for</span>(<span class="type">int</span> j=<span class="number">0</span>;j&lt;n;j++)</span><br><span class="line">			dp[i][j]=(dp[i<span class="number">-1</span>][<span class="built_in">Mod</span>(j-a*i)]+dp[i<span class="number">-1</span>][<span class="built_in">Mod</span>(j+b*i)])%mod;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%d&quot;</span>,dp[n<span class="number">-1</span>][<span class="built_in">Mod</span>(s)]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure> 
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io">ForeverYolo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io/posts/54458/">https://foreveryolo.github.io/posts/54458/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://foreveryolo.github.io" target="_blank">ForeverYolo的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80/">高级语言</a><a class="post-meta__tags" href="/tags/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/">算法学习</a><a class="post-meta__tags" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a></div><div class="post_share"><div class="social-share" data-image="https://s1.ax1x.com/2023/01/28/pSaPd0O.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/65270/" title="正整数C++高精度模板"><img class="cover" src="https://s1.ax1x.com/2023/01/30/pSdLPnH.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">正整数C++高精度模板</div></div></a></div><div class="next-post pull-right"><a href="/posts/2344/" title="算法——数论整理"><img class="cover" src="https://s1.ax1x.com/2023/01/26/pSN7D5F.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">算法——数论整理</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/posts/25567/" title="C++不常见但很好用的Api整理"><img class="cover" src="https://s1.ax1x.com/2023/01/30/pSdORJ0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-30</div><div class="title">C++不常见但很好用的Api整理</div></div></a></div><div><a href="/posts/65270/" title="正整数C++高精度模板"><img class="cover" src="https://s1.ax1x.com/2023/01/30/pSdLPnH.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-30</div><div class="title">正整数C++高精度模板</div></div></a></div><div><a href="/posts/5009/" title="树状数组"><img class="cover" src="https://s1.ax1x.com/2023/02/02/pSr7JVH.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-02-02</div><div class="title">树状数组</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ForeverYolo</div><div class="author-info__description">这是ForeverYolo的博客网站</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">21</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">16</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ForeverYolo/"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ForeverYolo/" target="_blank" title=""><i class="fab fa-github"></i></a><a class="social-icon" href="tencent://message/?uin=2572131118&amp;Site=Sambow&amp;Menu=yes" target="_blank" title="QQ"><i class="iconfont icon-QQ"></i></a><a class="social-icon" href="mailto:2572131118@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">北航在线打工人Orz</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B3%A2%E5%8A%A8%E6%95%B0%E5%88%97"><span class="toc-number">1.</span> <span class="toc-text">波动数列</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E6%8F%8F%E8%BF%B0"><span class="toc-number">1.1.</span> <span class="toc-text">题目描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%93%E5%85%A5%E6%8F%8F%E8%BF%B0"><span class="toc-number">1.2.</span> <span class="toc-text">输入描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%93%E5%87%BA%E6%8F%8F%E8%BF%B0"><span class="toc-number">1.3.</span> <span class="toc-text">输出描述</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A7%A3%E9%A2%98%E8%BF%87%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">解题过程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%EF%BC%8810%E5%88%86%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">第一层（10分）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF"><span class="toc-number">2.1.1.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81"><span class="toc-number">2.1.2.</span> <span class="toc-text">代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82%EF%BC%8820%E5%88%86%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">第二层（20分）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF-1"><span class="toc-number">2.2.1.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81-1"><span class="toc-number">2.2.2.</span> <span class="toc-text">代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82%EF%BC%88100%E5%88%86%EF%BC%89"><span class="toc-number">2.3.</span> <span class="toc-text">第三层（100分）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF-2"><span class="toc-number">2.3.1.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%BA%A7%E7%94%9F"><span class="toc-number">2.3.2.</span> <span class="toc-text">问题产生</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%96%E6%A8%A1%E5%BC%82%E5%B8%B8"><span class="toc-number">2.3.2.1.</span> <span class="toc-text">取模异常</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E5%AD%A6%E5%8F%96%E6%A8%A1"><span class="toc-number">2.3.2.2.</span> <span class="toc-text">数学取模</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81-2"><span class="toc-number">2.3.3.</span> <span class="toc-text">代码</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/5009/" title="树状数组"><img src="https://s1.ax1x.com/2023/02/02/pSr7JVH.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="树状数组"/></a><div class="content"><a class="title" href="/posts/5009/" title="树状数组">树状数组</a><time datetime="2023-02-02T15:48:30.000Z" title="发表于 2023-02-02 23:48:30">2023-02-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/25567/" title="C++不常见但很好用的Api整理"><img src="https://s1.ax1x.com/2023/01/30/pSdORJ0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++不常见但很好用的Api整理"/></a><div class="content"><a class="title" href="/posts/25567/" title="C++不常见但很好用的Api整理">C++不常见但很好用的Api整理</a><time datetime="2023-01-30T05:35:03.000Z" title="发表于 2023-01-30 13:35:03">2023-01-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/65270/" title="正整数C++高精度模板"><img src="https://s1.ax1x.com/2023/01/30/pSdLPnH.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="正整数C++高精度模板"/></a><div class="content"><a class="title" href="/posts/65270/" title="正整数C++高精度模板">正整数C++高精度模板</a><time datetime="2023-01-30T04:25:03.000Z" title="发表于 2023-01-30 12:25:03">2023-01-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/54458/" title="由波动数列对高级语言取模的思考"><img src="https://s1.ax1x.com/2023/01/28/pSaPd0O.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="由波动数列对高级语言取模的思考"/></a><div class="content"><a class="title" href="/posts/54458/" title="由波动数列对高级语言取模的思考">由波动数列对高级语言取模的思考</a><time datetime="2023-01-28T09:52:23.000Z" title="发表于 2023-01-28 17:52:23">2023-01-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/2344/" title="算法——数论整理"><img src="https://s1.ax1x.com/2023/01/26/pSN7D5F.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="算法——数论整理"/></a><div class="content"><a class="title" href="/posts/2344/" title="算法——数论整理">算法——数论整理</a><time datetime="2023-01-26T15:30:23.000Z" title="发表于 2023-01-26 23:30:23">2023-01-26</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By ForeverYolo</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.1
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, ''],
+        insertScript: [200, () => {
+          document.querySelectorAll('mjx-container').forEach(node => {
+            if (node.hasAttribute('display')) {
+              btf.wrap(node, 'div', { class: 'mathjax-overflow' })
+            } else {
+              btf.wrap(node, 'span', { class: 'mathjax-overflow' })
+            }
+          });
+        }, '', false]
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div><script src="/js/jquery.js"></script><script src="/js/foot.js"></script><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.8" zIndex="-1" count="150" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="true" data-text="青青子衿，悠悠我心。,纵我不往，子宁不嗣音？,青青子佩，悠悠我思。,纵我不往，子宁不来？,挑兮达兮，在城阙兮。,一日不见，如三月兮。,野有蔓草，零露漙兮。,有美一人，清扬婉兮。,邂逅相遇，适我愿兮。,野有蔓草，零露瀼瀼。,有美一人，婉如清扬。,邂逅相遇，与子偕臧。,没啦！别点啦!要循环啦!" data-fontsize="20px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
