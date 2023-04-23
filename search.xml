@@ -74,9 +74,9 @@
       
         <tags>
             
-            <tag> Linux </tag>
-            
             <tag> OS学习 </tag>
+            
+            <tag> Linux </tag>
             
             <tag> 记忆留存 </tag>
             
@@ -263,9 +263,9 @@
       
         <tags>
             
-            <tag> Linux </tag>
-            
             <tag> OS学习 </tag>
+            
+            <tag> Linux </tag>
             
         </tags>
       
@@ -707,20 +707,9 @@
     
     
     <entry>
-      <title>关于</title>
-      <link href="/about/index.html"/>
-      <url>/about/index.html</url>
-      
-        <content type="html"><![CDATA[<ul><li>2021-2025 北航<br>感恩每一次相遇！</li></ul>]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>archives</title>
-      <link href="/archives/index.html"/>
-      <url>/archives/index.html</url>
+      <title>link</title>
+      <link href="/link/index.html"/>
+      <url>/link/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -740,9 +729,20 @@
     
     
     <entry>
-      <title>link</title>
-      <link href="/link/index.html"/>
-      <url>/link/index.html</url>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <url>/about/index.html</url>
+      
+        <content type="html"><![CDATA[<ul><li>2021-2025 北航<br>感恩每一次相遇！</li></ul>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>archives</title>
+      <link href="/archives/index.html"/>
+      <url>/archives/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
