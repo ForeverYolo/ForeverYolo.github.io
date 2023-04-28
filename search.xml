@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>（施工中）CPU扩展设计——分支预测</title>
+      <link href="/posts/21201/"/>
+      <url>/posts/21201/</url>
+      
+        <content type="html"><![CDATA[<h1 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h1><p>本文为笔者学习《超标量处理器设计》的一些理解，请学习时结合本书食用~<br><a href="https://pan.baidu.com/s/1_FuWMCAaTii7CPYI19BaFQ?pwd=lgdq">超标量处理器设计分享</a></p><h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>考虑我们在计组设计中未曾考虑的问题：如果跳转指令成功跳转，选择默认不跳转的我们需要清空流水线前面的指令，这种清空被称为跳转惩罚。<br><div class="note green no-icon flat"><p>但由于我们的设计是五层流水线，跳转级在第二级，我们只需要引入延迟槽，便不需要清空流水线前面的指令，使得这个问题得到了解决。</p></div></p><p>但现代CPU设计具有以下的特点：</p><ul><li>流水线的深度往往较深，可以达到十几级，一次清空就要被浪费掉许多条指令。</li><li>流水线的设计采用超标量设计，一次取指取到大于等于两条指令。</li><li>处理器高并行。</li></ul><p>这样的特点导致了这种惩罚已经不是可以通过延迟槽避免的了，并且单次惩罚损失10+条指令。</p><p>并且在现代编程中，if,for,while这些语句的出现并不稀奇，所以这种频繁的惩罚是我们不能接受的，我们就需要对跳转进行尽力的预测，让CPU的实际运行尽力接近于我们的预测，这就引入了今天的设计——分支预测。</p><h1 id="预测内容"><a href="#预测内容" class="headerlink" title="预测内容"></a>预测内容</h1><h2 id="方向"><a href="#方向" class="headerlink" title="方向"></a>方向</h2><p>我们需要预测现在摆在我们面前的这条分支语句会不会发生跳转。</p><h2 id="目标地址"><a href="#目标地址" class="headerlink" title="目标地址"></a>目标地址</h2><p>我们需要预测现在摆在我们面前的这条分支语句如果真跳了，会跳到哪里？<br><div class="note pink no-icon flat"><p>这里可能有一个疑问，那就是跳到哪里这个难道不是固定的吗？我们会用一个式子直接算出来。确实，对于B类型的跳转是这样的<br>但J类型的跳转呢？比如<code>jr $ra</code>呢？假如现在用的$ra没被写回，或者还未产生怎么办？所以我们需要预测。<br>而且，一般情况下，我们并不通过计算来算B类型跳转，也是通过预测进行的。</p></div></p><h1 id="方向预测"><a href="#方向预测" class="headerlink" title="方向预测"></a>方向预测</h1><h2 id="基于两位饱和计数器的分支预测"><a href="#基于两位饱和计数器的分支预测" class="headerlink" title="基于两位饱和计数器的分支预测"></a>基于两位饱和计数器的分支预测</h2><h3 id="定位"><a href="#定位" class="headerlink" title="定位"></a>定位</h3><p>最好写的分支预测，后续更强大的分支预测的基础。</p><h3 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h3><h4 id="一条指令"><a href="#一条指令" class="headerlink" title="一条指令"></a>一条指令</h4><p>在某种情况下，对于某一条特定的跳转指令，跳转方向是固定的。<br><div class="note green no-icon flat"><p>这里强调一下某一条特定的跳转指令，指的是同一PC值取出来的那一条跳转指令，下同。</p></div><br>比如：For循环的循环判断<br>我们因此可以用一定量过去的同一PC的该条指令真正执行的跳转方向来预测本次跳转的方向。<br>由于是二位的，所以我们利用过去两次执行情况来预测本次执行，我们先定义四个状态</p><ul><li>Strongly taken: 计数器饱和，在这种状态下预测本次发生跳转。</li><li>Weakly taken: 计数器不饱和，在这种状态下预测本次发生跳转。</li><li>Weakly not taken: 计数器不饱和，在这种状态下预测本次不发生跳转。</li><li>Strongly not taken: 计数器饱和，在这种状态下预测本次不发生跳转。</li></ul><div class="note purple no-icon flat"><p>饱和不饱和在笔者这里看来代表了一种本次预测的可信度：<br>如果是饱和的，那有很大概率预测是正确的。<br>如果是不饱和的，那有相比于饱和较低的概率预测是正确的。</p></div><p>使用方法很简单：</p><ul><li>对于每次预测的结果，我们用它来改变状态机的状态。</li><li>对于每次进行的预测，我们根据我们当前所处的状态给出预测。</li></ul><p>状态转移如下：<br><img src="两位饱和计数.png" alt="饱和计数"></p><p>例如现在我们处于Strongly not taken状态，并且这时候来了一条需要预测的指令，我们做出了不跳转的预测。<br>假如我们预测正确，状态不变，仍为Strongly not taken饱和。<br>假如我们预测失败，状态转移，变为Weakly not taken不饱和。</p><h4 id="完全实现"><a href="#完全实现" class="headerlink" title="完全实现"></a>完全实现</h4><p>前面是对于某一条固定PC值对应的跳转指令的预测方式，但在实际中，我们会有很多pc值不同的跳转，我们都需要对其进行预测。</p><p>所以我们可以建立一个数组（在FPGA开发中是寄存器组），存放每一个跳转的两位饱和计数的状态。</p><p>每次预测和更新都从这个数组中取出状态进行更新，这样就完成了对于所有跳转的预测。</p><p>但是，由于板子资源有限，我们显然不能开2^32大小的数组，所以我们可以取PC的某一些位作为寻址。</p><p><img src="取PC的一些位.png" alt="取PC的一些位"></p><p>显然可能会发生碰撞，我们可以通过哈希降低碰撞。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 龙芯 NSCSCC </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 分支预测 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Unix 记忆留存 （三）</title>
       <link href="/posts/50087/"/>
       <url>/posts/50087/</url>
@@ -94,7 +119,7 @@
       
       <categories>
           
-          <category> 龙芯——CPU扩展设计 </category>
+          <category> 龙芯 NSCSCC </category>
           
       </categories>
       
@@ -150,7 +175,7 @@
       
       <categories>
           
-          <category> 龙芯——CPU扩展设计 </category>
+          <category> 龙芯 NSCSCC </category>
           
       </categories>
       
