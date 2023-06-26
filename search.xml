@@ -4,6 +4,33 @@
   
     
     <entry>
+      <title>Rust学习</title>
+      <link href="/posts/38177/"/>
+      <url>/posts/38177/</url>
+      
+        <content type="html"><![CDATA[<h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><h2 id="安装Rust"><a href="#安装Rust" class="headerlink" title="安装Rust"></a>安装Rust</h2><p>Rust官网：<a href="https://www.rust-lang.org/zh-CN/">官网</a><br>安装好后可以运行命令<code>cargo --version</code>检测，出现版本号则安装完毕</p><h2 id="VsCode配置"><a href="#VsCode配置" class="headerlink" title="VsCode配置"></a>VsCode配置</h2><div class="note blue no-icon flat"><p>习惯了使用专用编辑器的我对此感到十分痛苦。</p></div><p>我一共安装了三个：</p><ol><li>rust-analyzer：它会实时编译和分析你的 Rust 代码，提示代码中的错误，并对类型进行标注。</li><li>rust syntax：语法高亮</li><li>CodeLLDB：进行调试。</li></ol><div class="note green no-icon flat"><p>第一次调试时可能会出现报错，提示无法连接什么的，这时候需要挂一个梯子去官网下载vsix，然后在VsCode插件安装中选择通过vsix安装插件即可。</p></div><h1 id="通过cargo新建项目"><a href="#通过cargo新建项目" class="headerlink" title="通过cargo新建项目"></a>通过cargo新建项目</h1><p><code>cargo new 项目名称</code><br>例如，在一个空文件夹下执行该命令：<code>cargo new HelloWorld</code>，文件结构如下：<br><img src="文件结构.png" alt="文件结构"><br><code>/src/main.rs</code>为源代码<br><code>/Cargo.lock</code>为编译后生成的，负责追踪项目依赖的精确版本<br><code>/Cargo.toml</code>Cargo的配置格式，其中：</p><ul><li>pacakge 配置包的项目名，项目版本，项目作者，Rust版本</li><li>dependencies 列出项目的依赖项<div class="note pink no-icon flat"><p>在rust里面，代码的包称作crate.</p></div></li></ul><h1 id="cargo命令"><a href="#cargo命令" class="headerlink" title="cargo命令"></a>cargo命令</h1><p><code>cargo bulid</code> 构建项目<br><code>cargo run</code> 构建和运行项目<br><code>cargo check</code> 检查代码<br><code>cargo build --release</code> 为发布进行构建（编译时进行优化，时间更长但效果更好）</p><h1 id="cargo实战"><a href="#cargo实战" class="headerlink" title="cargo实战"></a>cargo实战</h1><p>接下来在实战中理解rust语言：</p><h2 id="猜数字-1"><a href="#猜数字-1" class="headerlink" title="猜数字-1"></a>猜数字-1</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::io;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;猜数！&quot;</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;猜测一个数！&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">fifo</span> = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">guess</span> = <span class="type">String</span>::<span class="title function_ invoke__">new</span>();</span><br><span class="line">    io::<span class="title function_ invoke__">stdin</span>().<span class="title function_ invoke__">read_line</span>(&amp;<span class="keyword">mut</span> guess).<span class="title function_ invoke__">expect</span>(<span class="string">&quot;无法读取行&quot;</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;你猜测的数是：&#123;&#125;&quot;</span>,guess);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure> <p>解释：</p><ol><li><code>use std::io</code> 导入库，<code>use + 库名字</code></li><li><code>fn</code> 代表声明一个函数，函数体依旧用花括号圈起来。</li><li><code>println!</code> Rust的输出，这是一个宏，<code>!</code>就是代表了这是一个宏</li><li><code>let fifo = 1</code> Rust的声明变量，Rust中认为变量默认都是不可变的，即一次声明不可更改。</li><li><code>mut</code> 同样是声明，其中的<code>mut</code>表示这个变量可变。</li><li><code>String::new()</code> String是Rust中的一个类型，<code>::</code>代表了后面的函数是该类型中的一个关联函数，关联函数是针对类型实现的，不是针对实例实现的，可以理解为Java中的静态方法。</li><li><code>let mut guess = String::new()</code> 代表了将可变变量guess绑定到了<code>String::new()</code>的返回值上，<code>=</code>有绑定的意思。</li><li><code>read_line(&amp;mut guess)</code> 传的是引用，这点和C++很像，为了改变guess的值，显然也要用<code>mut</code>表示这个变量可变。<div class="note pink no-icon flat"><p>Rust保证<code>&amp;</code>使用的安全性。</p></div></li><li><code>io::stdin().read_line(&amp;mut guess)</code> 其中的<code>.</code>代表了后面的函数是该实例中的一个函数。<div class="note purple no-icon flat"><p>.expect体现了Rust的安全性，这里不写这个expect编译会警告</p></div></li><li><code>println!(&quot;你猜测的数是：&#123;&#125;&quot;,guess);</code> 其中的<code>&#123;&#125;</code>为占位符，输出时会被替换为后面变量的值，多个<code>&#123;&#125;</code>按顺序进行替换。</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 高级语言 </tag>
+            
+            <tag> 语言学习 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>操作系统文件系统复习</title>
       <link href="/posts/63874/"/>
       <url>/posts/63874/</url>
