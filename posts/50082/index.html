@@ -1,0 +1,452 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>ARMv8 学习 | ForeverYolo的博客</title><meta name="author" content="ForeverYolo"><meta name="copyright" content="ForeverYolo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="ARMv8 初步 ARMv8 定义了两种执行状态，AArch64 和 AArch 32 AArch64 最多可以在寄存器中传递 8 个参数 AArch32 最多可以在寄存器中传递 4 个参数   ARMv8 中，执行发生在 4 个异常级别之一，异常级别决定了特权级别。      异常级别 解释     EL0 普通用户的用户程序   EL1 操作系统内核，通常说是有特权的   EL2 Hyperv">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ARMv8 学习">
+<meta property="og:url" content="https://foreveryolo.github.io/posts/50082/index.html">
+<meta property="og:site_name" content="ForeverYolo的博客">
+<meta property="og:description" content="ARMv8 初步 ARMv8 定义了两种执行状态，AArch64 和 AArch 32 AArch64 最多可以在寄存器中传递 8 个参数 AArch32 最多可以在寄存器中传递 4 个参数   ARMv8 中，执行发生在 4 个异常级别之一，异常级别决定了特权级别。      异常级别 解释     EL0 普通用户的用户程序   EL1 操作系统内核，通常说是有特权的   EL2 Hyperv">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2023/08/05/pPkxoZQ.jpg">
+<meta property="article:published_time" content="2023-08-05T09:08:21.000Z">
+<meta property="article:modified_time" content="2023-08-08T12:12:33.443Z">
+<meta property="article:author" content="ForeverYolo">
+<meta property="article:tag" content="ARM 体系结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2023/08/05/pPkxoZQ.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://foreveryolo.github.io/posts/50082/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="baidu-site-verification" content="3cb4bb475c7dde65b56ca90f7afdabed"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  }
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ARMv8 学习',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-08-08 20:12:33'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/iconfont.css"><link rel="stylesheet" href="/css/myStyle.css"><link rel="stylesheet" href="/css/myIco.css"><link rel="stylesheet" href="/css/fontsetting.css"><script defer src="/live2d-widget-master/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">49</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s1.ax1x.com/2023/08/05/pPkxoZQ.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">ARMv8 学习</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-08-05T09:08:21.000Z" title="发表于 2023-08-05 17:08:21">2023-08-05</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-08-08T12:12:33.443Z" title="更新于 2023-08-08 20:12:33">2023-08-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Hypervisor-%E5%AD%A6%E4%B9%A0/">Hypervisor 学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>5分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="ARMv8 学习"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="ARMv8-初步"><a href="#ARMv8-初步" class="headerlink" title="ARMv8 初步"></a>ARMv8 初步</h2><ul>
+<li>ARMv8 定义了两种执行状态，AArch64 和 AArch 32</li>
+<li>AArch64 最多可以在寄存器中传递 8 个参数</li>
+<li>AArch32 最多可以在寄存器中传递 4 个参数  </li>
+<li>ARMv8 中，执行发生在 4 个异常级别之一，异常级别决定了特权级别。</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>异常级别</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EL0</td>
+<td>普通用户的用户程序</td>
+</tr>
+<tr>
+<td>EL1</td>
+<td>操作系统内核，通常说是有特权的</td>
+</tr>
+<tr>
+<td>EL2</td>
+<td>Hypervisor(虚拟机管理程序)</td>
+</tr>
+<tr>
+<td>EL3</td>
+<td>底层固件，包括安全监视器</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>ARMv8 也提供了两种安全状态：安全状态和非安全状态，这种保护使得普通操作系统和受信操作系统可以安全的同时运行在同一操作系统上。</li>
+<li><p>ARMv8 中 EL3 的安全监视器充当普通和安全世界之间切换的网关</p>
+</li>
+<li><p>AArch 64 异常级别和安全状态组织形式如下</p>
+</li>
+</ul>
+<p><img src="AArch64 异常组织形式.png" alt="AArch64 异常组织形式.png"></p>
+<ul>
+<li>AArch 32 异常级别和安全状态组织形式如下</li>
+</ul>
+<p><img src="AArch32 异常组织形式.png" alt="AArch32 异常组织形式.png"></p>
+<ul>
+<li>只能通过改变异常级别来改变执行状态。对异常的处理可能从AArch32更改为AArch64，从异常返回可能从AArch64更改为AArch32。</li>
+</ul>
+<div class="note purple no-icon flat"><p>不能反着来是因为一个AArch32操作系统不能承载64位的应用程序，或者说一个AArch32Hypervisor不能承载64位的系统。</p>
+</div>
+<p><img src="执行状态切换.png" alt="执行状态切换.png"></p>
+<h2 id="ARMv8-寄存器"><a href="#ARMv8-寄存器" class="headerlink" title="ARMv8 寄存器"></a>ARMv8 寄存器</h2><h3 id="通用寄存器"><a href="#通用寄存器" class="headerlink" title="通用寄存器"></a>通用寄存器</h3><ul>
+<li>AArch 64 执行状态提供了 31 x 64 位的通用寄存器，可以在任何时间和所有异常级别访问。每个寄存器是64位宽，它们通常被称为X0-X30寄存器。</li>
+</ul>
+<p><img src="ARMv8通用寄存器.png" alt="ARMv8通用寄存器.png"></p>
+<ul>
+<li>每个AArch64 64位通用寄存器(X0-X30)也有一个32位(W0-W30)形式</li>
+</ul>
+<p><img src="Wn和Xn.png" alt="Wn和Xn.png"></p>
+<ul>
+<li>W寄存器读取时忽略相应X寄存器的高32位,写入W寄存器则将其余高位设置为0.</li>
+</ul>
+<h3 id="专用寄存器"><a href="#专用寄存器" class="headerlink" title="专用寄存器"></a>专用寄存器</h3><p><img src="特殊寄存器.png" alt="特殊寄存器.png"></p>
+<ul>
+<li><p>没有真正意义上的 31 号寄存器，很多时候都代表零寄存器，在某些特殊指令中也代表 SP 寄存器。</p>
+</li>
+<li><p>访问零寄存器时，所有读操作都返回 0 ，所有写操作无效，这点和 MIPS 很像。</p>
+</li>
+<li><p>当在AArch64中处于非EL0异常级别时，处理器可以使用以下两种寄存器：与异常级别关联的专用64位堆栈指针(SP_ELn)，或者 EL0 的堆栈指针（SP_EL0）</p>
+</li>
+<li><p>ELR 保存异常返回地址，和 MIPS 中的 EPC 很像</p>
+</li>
+<li><p>SPSR 当捕获一个异常时，处理器状态存储在相关的Saved Program Status register(SPSR)中，类似于ARMv7中的CPSR。SPSR在捕获异常之前保存ch（处理器状态）的值，并用于在执行异常返回时恢复PSTATE（处理器状态）的值。</p>
+</li>
+</ul>
+<p><img src="SPSR.png" alt="SPSR.png"></p>
+<p><img src="SPSR解释.png" alt="SPSR解释.png"></p>
+<ul>
+<li>在ARMv8中，对SPSR的写入依赖于异常级别。如果在EL1中发生异常，则使用SPSR_EL1。如果在EL2中发生异常，则使用SPSR_EL2，如果在EL3中发生异常，则使用SPSR_EL3。当发生异常时，核心要填充SPSR。</li>
+</ul>
+<h3 id="系统寄存器"><a href="#系统寄存器" class="headerlink" title="系统寄存器"></a>系统寄存器</h3><ul>
+<li><p>在AArch64中，系统配置通过系统寄存器进行控制，并使用MSR和MRS指令来获取、更改系统寄存器的值。</p>
+</li>
+<li><p>寄存器的名字告诉你可以访问它的最低的异常级别，这点与专用寄存器有所差别</p>
+</li>
+</ul>
+<p><img src="系统寄存器-1.png" alt="系统寄存器-1.png"></p>
+<p><img src="系统寄存器-2.png" alt="系统寄存器-2.png"></p>
+<p><img src="系统寄存器-3.png" alt="系统寄存器-3.png"></p>
+<p><img src="系统寄存器-4.png" alt="系统寄存器-4.png"></p>
+<p><img src="系统寄存器-5.png" alt="系统寄存器-5.png"></p>
+<h4 id="系统控制寄存器"><a href="#系统控制寄存器" class="headerlink" title="系统控制寄存器"></a>系统控制寄存器</h4><p><img src="SCTLR.png" alt="SCTLR.png"></p>
+<ul>
+<li>并非所有位在EL1以上都可用。每个位代表以下内容</li>
+</ul>
+<p><img src="SCTLR字段-1.png" alt="SCTLR字段-1.png"></p>
+<p><img src="SCTLR字段-2.png" alt="SCTLR字段-2.png"></p>
+<h2 id="浮点寄存器"><a href="#浮点寄存器" class="headerlink" title="浮点寄存器"></a>浮点寄存器</h2><ul>
+<li>除了通用寄存器外，ARMv8还有32个128位浮点寄存器，标记为V0-V31。32个寄存器用于保存标量浮点指令的浮点操作数，以及NEON操作的标量和向量操作数。</li>
+</ul>
+<h2 id="ARMv8-处理器状态"><a href="#ARMv8-处理器状态" class="headerlink" title="ARMv8 处理器状态"></a>ARMv8 处理器状态</h2><ul>
+<li><p>处理器状态作为字段提供</p>
+</li>
+<li><p>定义如下</p>
+</li>
+</ul>
+<p><img src="PSR.png" alt="PSR.png"></p>
+<div class="note purple no-icon flat"><p>细心的话会发现这个字段定义和 SPSR 的字段高度类似，正如前面所说，异常时处理器状态就是被保存在 SPSR 中的。</p>
+</div>
+<h2 id="ARMv8-指令集"><a href="#ARMv8-指令集" class="headerlink" title="ARMv8 指令集"></a>ARMv8 指令集</h2><ul>
+<li>指令集中的指令仍然是 32 位长</li>
+</ul>
+<h3 id="数据处理指令"><a href="#数据处理指令" class="headerlink" title="数据处理指令"></a>数据处理指令</h3><p><code>Instruction Rd, Rn, Operand2</code></p>
+<ul>
+<li>R 代表这里可以是X寄存器，也可以是W寄存器</li>
+<li>D 代表这里是目标寄存器</li>
+</ul>
+<h4 id="算术和逻辑运算"><a href="#算术和逻辑运算" class="headerlink" title="算术和逻辑运算"></a>算术和逻辑运算</h4><p><img src="算术和逻辑运算.png" alt="算术和逻辑运算.png"></p>
+<ul>
+<li><p>有些指令还带有S后缀，表示该指令设置了标志。表6-1中的说明包括:ADDS、SUBS、ADCS、SBCS、ANDS和BICS。还有其他的标志设置指令，特别是CMP、CMN和TST，但它们没有S后缀，因为它们必然会设置标志。</p>
+</li>
+<li><p>ADD 加法，SUB 减法，ADC 带进位加法，SBC 带进位减法，NEG 求补</p>
+</li>
+<li>AND 与运算，BIC 对 Rn 中的值 和 Operand2 值的反码按位进行逻辑“与”运算，ORR 或运算，ORN 对第二个操作数的按位取反后执行或，EOR 异或运算，EON 对第二个操作数的按位取反后执行异或。</li>
+<li>CMP 的比较方式：<code>op1 - (op2)</code>，CMN 的比较方式： <code>op1 - (-op2)</code>，TST 用来测试某一位或某几位是 0 还是 1。</li>
+<li>MOV 移动值，MON 用它赋值的时候，先按位取反。</li>
+</ul>
+<h4 id="乘和除指令"><a href="#乘和除指令" class="headerlink" title="乘和除指令"></a>乘和除指令</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>指令名</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MADD</td>
+<td>乘后加</td>
+</tr>
+<tr>
+<td>MNEG</td>
+<td>乘后取相反数</td>
+</tr>
+<tr>
+<td>MSUB</td>
+<td>乘后减</td>
+</tr>
+<tr>
+<td>NUL</td>
+<td>乘</td>
+</tr>
+<tr>
+<td>SMADDL</td>
+<td>对 Long 型做有符号的乘加运算</td>
+</tr>
+<tr>
+<td>SMNEGL</td>
+<td>对 Long 型做有符号的乘再取相反数运算</td>
+</tr>
+<tr>
+<td>SMSUBL</td>
+<td>对 Long 型做有符号的乘减运算</td>
+</tr>
+<tr>
+<td>SMULH</td>
+<td>返回高半部分的有符号乘</td>
+</tr>
+<tr>
+<td>SMULL</td>
+<td>对 Long 型做有符号的乘运算</td>
+</tr>
+<tr>
+<td>UMADDL</td>
+<td>对 Long 型做无符号的乘加运算</td>
+</tr>
+<tr>
+<td>UMNEGL</td>
+<td>对 Long 型做无符号的乘再取相反数运算</td>
+</tr>
+<tr>
+<td>UMSUBL</td>
+<td>对 Long 型做无符号的乘减运算</td>
+</tr>
+<tr>
+<td>UMULH</td>
+<td>返回高半部分的无符号乘</td>
+</tr>
+<tr>
+<td>UMULL</td>
+<td>对 Long 型 做无符号的乘运算</td>
+</tr>
+<tr>
+<td>SDIV</td>
+<td>有符号的除法</td>
+</tr>
+<tr>
+<td>UDIV</td>
+<td>无符号的除法</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="note green no-icon flat"><p>强调这么多的 Long 型乘法目的是在于强调 ARMv8 采用 64 位寄存器后的优越所在。一条指令即可完成 64 位的运算。</p>
+</div>
+<h4 id="移位操作"><a href="#移位操作" class="headerlink" title="移位操作"></a>移位操作</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>指令名</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LSL</td>
+<td>逻辑左移</td>
+</tr>
+<tr>
+<td>LSR</td>
+<td>逻辑右移</td>
+</tr>
+<tr>
+<td>ASR</td>
+<td>算术右移</td>
+</tr>
+<tr>
+<td>ROR</td>
+<td>旋转右移</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="位运算图解.png" alt="位运算图解.png"></p>
+<h4 id="位域和字节操作指令"><a href="#位域和字节操作指令" class="headerlink" title="位域和字节操作指令"></a>位域和字节操作指令</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>指令名</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SXTB</td>
+<td>复制最高位将 8 位扩展到 64 位</td>
+</tr>
+<tr>
+<td>CLZ</td>
+<td>计算在寄存器中前导零的个数</td>
+</tr>
+<tr>
+<td>RBIT</td>
+<td>反转所有位</td>
+</tr>
+<tr>
+<td>REV</td>
+<td>反转寄存器的字节顺序</td>
+</tr>
+<tr>
+<td>REV16</td>
+<td>反转寄存器中每个半字的字节顺序</td>
+</tr>
+<tr>
+<td>REV32</td>
+<td>反转寄存器中每个字的字节顺序</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>REV16图解：</p>
+<p><img src="REV16.png" alt="REV16.png"></p>
+<p>REV32图解：</p>
+<p><img src="REV32.png" alt="REV32.png"></p>
+<div class="note green no-icon flat"><p>这个可用来切换大小端序。</p>
+</div>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io">ForeverYolo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io/posts/50082/">https://foreveryolo.github.io/posts/50082/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://foreveryolo.github.io" target="_blank">ForeverYolo的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/ARM-%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/">ARM 体系结构</a></div><div class="post_share"><div class="social-share" data-image="https://s1.ax1x.com/2023/08/05/pPkxoZQ.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/31035/" title="Mips-编译优化总结"><img class="cover" src="https://s11.ax1x.com/2023/12/19/piIyZZt.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Mips-编译优化总结</div></div></a></div><div class="next-post pull-right"><a href="/posts/17528/" title="VirtualBox 系统盘无损扩容"><img class="cover" src="https://s1.ax1x.com/2023/07/13/pChva5j.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">VirtualBox 系统盘无损扩容</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="lv-container" data-id="city" data-uid="MTAyMC81ODA1MC8zNDUxMw"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ForeverYolo</div><div class="author-info__description">这是ForeverYolo的博客网站</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">49</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ForeverYolo/"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ForeverYolo/" target="_blank" title=""><i class="fab fa-github"></i></a><a class="social-icon" href="tencent://message/?uin=2572131118&amp;Site=Sambow&amp;Menu=yes" target="_blank" title="QQ"><i class="iconfont icon-QQ"></i></a><a class="social-icon" href="mailto:2572131118@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">北航在线打工人Orz</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#ARMv8-%E5%88%9D%E6%AD%A5"><span class="toc-number">1.</span> <span class="toc-text">ARMv8 初步</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ARMv8-%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">2.</span> <span class="toc-text">ARMv8 寄存器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">2.1.</span> <span class="toc-text">通用寄存器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%93%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">2.2.</span> <span class="toc-text">专用寄存器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">2.3.</span> <span class="toc-text">系统寄存器</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E6%8E%A7%E5%88%B6%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">2.3.1.</span> <span class="toc-text">系统控制寄存器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">3.</span> <span class="toc-text">浮点寄存器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ARMv8-%E5%A4%84%E7%90%86%E5%99%A8%E7%8A%B6%E6%80%81"><span class="toc-number">4.</span> <span class="toc-text">ARMv8 处理器状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ARMv8-%E6%8C%87%E4%BB%A4%E9%9B%86"><span class="toc-number">5.</span> <span class="toc-text">ARMv8 指令集</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E6%8C%87%E4%BB%A4"><span class="toc-number">5.1.</span> <span class="toc-text">数据处理指令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AE%97%E6%9C%AF%E5%92%8C%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97"><span class="toc-number">5.1.1.</span> <span class="toc-text">算术和逻辑运算</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B9%98%E5%92%8C%E9%99%A4%E6%8C%87%E4%BB%A4"><span class="toc-number">5.1.2.</span> <span class="toc-text">乘和除指令</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A7%BB%E4%BD%8D%E6%93%8D%E4%BD%9C"><span class="toc-number">5.1.3.</span> <span class="toc-text">移位操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%8D%E5%9F%9F%E5%92%8C%E5%AD%97%E8%8A%82%E6%93%8D%E4%BD%9C%E6%8C%87%E4%BB%A4"><span class="toc-number">5.1.4.</span> <span class="toc-text">位域和字节操作指令</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/1054/" title="Hyper-V HCN 配置端口映射"><img src="https://s11.ax1x.com/2023/12/19/piIyZZt.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hyper-V HCN 配置端口映射"/></a><div class="content"><a class="title" href="/posts/1054/" title="Hyper-V HCN 配置端口映射">Hyper-V HCN 配置端口映射</a><time datetime="2024-09-03T15:44:14.000Z" title="发表于 2024-09-03 23:44:14">2024-09-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/6663/" title="编译总结感想"><img src="https://s11.ax1x.com/2023/12/19/piIyZZt.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="编译总结感想"/></a><div class="content"><a class="title" href="/posts/6663/" title="编译总结感想">编译总结感想</a><time datetime="2023-12-19T08:17:51.298Z" title="发表于 2023-12-19 16:17:51">2023-12-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/31035/" title="Mips-编译优化总结"><img src="https://s11.ax1x.com/2023/12/19/piIyZZt.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Mips-编译优化总结"/></a><div class="content"><a class="title" href="/posts/31035/" title="Mips-编译优化总结">Mips-编译优化总结</a><time datetime="2023-12-19T04:22:16.000Z" title="发表于 2023-12-19 12:22:16">2023-12-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/50082/" title="ARMv8 学习"><img src="https://s1.ax1x.com/2023/08/05/pPkxoZQ.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ARMv8 学习"/></a><div class="content"><a class="title" href="/posts/50082/" title="ARMv8 学习">ARMv8 学习</a><time datetime="2023-08-05T09:08:21.000Z" title="发表于 2023-08-05 17:08:21">2023-08-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/17528/" title="VirtualBox 系统盘无损扩容"><img src="https://s1.ax1x.com/2023/07/13/pChva5j.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="VirtualBox 系统盘无损扩容"/></a><div class="content"><a class="title" href="/posts/17528/" title="VirtualBox 系统盘无损扩容">VirtualBox 系统盘无损扩容</a><time datetime="2023-07-13T12:44:59.000Z" title="发表于 2023-07-13 20:44:59">2023-07-13</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ForeverYolo</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>function loadLivere () {
+  if (typeof LivereTower === 'object') {
+    window.LivereTower.init()
+  }
+  else {
+    (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  }
+}
+
+if ('Livere' === 'Livere' || !false) {
+  if (false) btf.loadComment(document.getElementById('lv-container'), loadLivere)
+  else loadLivere()
+}
+else {
+  function loadOtherComment () {
+    loadLivere()
+  }
+}</script></div><script src="/js/jquery.js"></script><script src="/js/foot.js"></script><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.8" zIndex="-1" count="150" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="true" data-text="青青子衿，悠悠我心。,纵我不往，子宁不嗣音？,青青子佩，悠悠我思。,纵我不往，子宁不来？,挑兮达兮，在城阙兮。,一日不见，如三月兮。,野有蔓草，零露漙兮。,有美一人，清扬婉兮。,邂逅相遇，适我愿兮。,野有蔓草，零露瀼瀼。,有美一人，婉如清扬。,邂逅相遇，与子偕臧。,没啦！别点啦!要循环啦!" data-fontsize="20px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

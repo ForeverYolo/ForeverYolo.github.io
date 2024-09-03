@@ -4,6 +4,106 @@
   
     
     <entry>
+      <title>Hyper-V HCN 配置端口映射</title>
+      <link href="/posts/1054/"/>
+      <url>/posts/1054/</url>
+      
+        <content type="html"><![CDATA[<h1 id="引入"><a href="#引入" class="headerlink" title="引入"></a>引入</h1><p>windows 开启 Hyper-V 后，会创建一个如图所示的默认虚拟 Switch 用于向虚拟机提供网络：<br><img src="Default-Switch.png" alt="DefaultSwitch"></p><p>上图是 Hyper-V 管理器的界面，如图所示，它指示这个默认网络使用 NAT 向虚拟机提供网络，事实上，它使用的是 NAT 的丐版 —— ICS。</p><div class="note purple no-icon flat"><p>究竟两者有什么区别呢？在 Windows 2000 的帮助文件中 ICS 和 NAT 分别叫做 Internet 的转换连接和路由连接，其实说白了 ICS 就是 NAT 的简化版，使用 ICS 无需理解 IP 地址和路由方面的一些知识，并且提供一种局域网中使用 Windows 2000 路由器共享 Internet 的简化配置，不过 ICS 可能不允许局域网和 Internet 主机之间所有的 IP 通信，如《暗黑破坏神》一类的多玩家游戏、实时通讯及其他对等服务，如果在公用 Internet上使用专用地址或同时使用同一端口号，这些应用程序就会中止。而 NAT 的配置需要有关于IP地址和路由配置方面的知识，它的配置比 ICS 要复杂，它允许在局域网和 Internet 主机间所有的IP通信。此外，ICS 只能使用一个合法的公用IP地址，而 NAT 可以通过配置地址池的方式使用ISP提供的多个合法的公用IP地址供客户机共享。</p></div><p>此外，Hyper-V HCN 配置端口映射，要求 Switch 的类型为真正的 NAT 类型，这就带出了这篇文章 —— 如何利用 Hyper-V HCN 成功配置端口映射。</p><h1 id="创建-Switch"><a href="#创建-Switch" class="headerlink" title="创建 Switch"></a>创建 Switch</h1><p>因为默认的网络的类型为 ICS，因此直接在现有网络上进行配置成为了奢望，需要为此重新创建一个网络。参考<a href="https://learn.microsoft.com/en-us/virtualization/api/hcn/hns_schema">HCN-JSON-Guide</a>进行配置。</p><p>一个可用的示例配置如下</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;SchemaVersion&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;Major&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;Minor&quot;</span><span class="punctuation">:</span> <span class="number">0</span></span><br><span class="line"><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;Name&quot;</span> <span class="punctuation">:</span> <span class="string">&quot;NATTest&quot;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;Type&quot;</span>  <span class="punctuation">:</span> <span class="string">&quot;NAT&quot;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;Ipams&quot;</span> <span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;Type&quot;</span> <span class="punctuation">:</span> <span class="string">&quot;Dhcp&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;Subnets&quot;</span> <span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;IpAddressPrefix&quot;</span> <span class="punctuation">:</span> <span class="string">&quot;192.168.100.0/24&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;Routes&quot;</span> <span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">                    <span class="punctuation">&#123;</span></span><br><span class="line">                        <span class="attr">&quot;NextHop&quot;</span> <span class="punctuation">:</span> <span class="string">&quot;192.168.100.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;DestinationPrefix&quot;</span> <span class="punctuation">:</span> <span class="string">&quot;0.0.0.0/0&quot;</span></span><br><span class="line">                    <span class="punctuation">&#125;</span></span><br><span class="line">                <span class="punctuation">]</span></span><br><span class="line">            <span class="punctuation">&#125;</span></span><br><span class="line">        <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;MacPool&quot;</span><span class="punctuation">:</span>  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;Ranges&quot;</span> <span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;EndMacAddress&quot;</span><span class="punctuation">:</span>  <span class="string">&quot;00-15-5D-52-CF-FF&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;StartMacAddress&quot;</span><span class="punctuation">:</span>  <span class="string">&quot;00-15-5D-52-C0-00&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure> <ol><li>SchemaVersion 为 JSON SchemaVersion 版本</li><li>Name 为将要创建的虚拟 Switch 名字。</li><li>Type 为将要创建的虚拟 Switch 类型，这里要写为 NAT。才能让下文的 EndPoint 成功生效。</li><li>Ipams 配置子网参数。</li><li>MacPool 配置该虚拟 Switch 可为连接到其的 EndPoint 的 MacAddress。</li></ol><h1 id="配置-EndPoint"><a href="#配置-EndPoint" class="headerlink" title="配置 EndPoint"></a>配置 EndPoint</h1><p>创建好 NAT 类型的 Switch 后，就可以创建 EndPoint 连接到该 Switch，虚拟机则连接到该 EndPoint。同样参考<a href="https://learn.microsoft.com/en-us/virtualization/api/hcn/hns_schema">HCN-JSON-Guide</a>进行配置。</p><p>一个可用的示例配置如下</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;SchemaVersion&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;Major&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;Minor&quot;</span><span class="punctuation">:</span> <span class="number">0</span></span><br><span class="line"><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;Owner&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Sample&quot;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;HostComputeNetwork&quot;</span><span class="punctuation">:</span> <span class="string">&quot;AD7CE019-F3DB-463F-9E57-9164583F6C03&quot;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;MacAddress&quot;</span><span class="punctuation">:</span> <span class="string">&quot;00-15-5D-52-C1-89&quot;</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;Policies&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;Type&quot;</span> <span class="punctuation">:</span> <span class="string">&quot;PortMapping&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;Settings&quot;</span> <span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;Protocol&quot;</span><span class="punctuation">:</span> <span class="number">6</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;InternalPort&quot;</span> <span class="punctuation">:</span> <span class="number">22</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;ExternalPort&quot;</span> <span class="punctuation">:</span> <span class="number">22</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span>   </span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure> <ol><li>HostComputeNetwork 填写 NAT Switch 的 GUID</li><li>MacAddress 填写为 NAT Switch 提供的 MacPool 中的任意一个 MacAddress</li><li>通过 Policies 的 PortMapping 配置端口映射</li><li>Protocol 指定端口映射在哪个协议上进行，这里的 6 为 TCP</li><li>InternalPort 指定虚拟机暴露的端口</li><li>ExternalPort 指定Host暴露的端口</li></ol><p>效果是，虚拟机 22 端口被转换到了 Host 的 22 端口上。</p><h1 id="组装这些配置"><a href="#组装这些配置" class="headerlink" title="组装这些配置"></a>组装这些配置</h1><p>这里利用微软 HCN 的 API 即可完成</p><ol><li>HcnCreateNetwork 创建该 NAT 网络并启动。</li><li>HcnCreateEndpoint 创建该 EndPoint 并连接到参数所传入的网络上，并启动。</li></ol><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">unique_hcn_network virtual_net_work;</span><br><span class="line">  wil::unique_cotaskmem_string result;</span><br><span class="line">  <span class="built_in">EXPECT_EQ</span>(S_OK, <span class="built_in">HcnCreateNetwork</span>(network_guid, kNetworkSettings.<span class="built_in">c_str</span>(), virtual_net_work.<span class="built_in">put</span>(), result.<span class="built_in">put</span>()));</span><br><span class="line">  <span class="comment">// Transform GUID format EndpointId</span></span><br><span class="line">  GUID endpoint_id_guid;</span><br><span class="line">  <span class="built_in">StringToGuid</span>(endpoint_id, endpoint_id_guid);</span><br><span class="line">  <span class="comment">// Configure endPoint</span></span><br><span class="line">  unique_hcn_endpoint virtual_end_point;</span><br><span class="line">  <span class="comment">// Create endPoint in network</span></span><br><span class="line">  <span class="built_in">EXPECT_EQ</span>(S_OK, <span class="built_in">HcnCreateEndpoint</span>(virtual_net_work.<span class="built_in">get</span>(), endpoint_id_guid,</span><br><span class="line">      end_point_setting.<span class="built_in">c_str</span>(), virtual_end_point.<span class="built_in">put</span>(),</span><br><span class="line">                                    result.<span class="built_in">put</span>()));</span><br></pre></td></tr></table></figure> <p>具体可以参考，<a href="https://learn.microsoft.com/en-us/windows-server/networking/technologies/hcn/hcn-top">HCN-API-Sample</a>学习。</p><h1 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h1><p>最近在学习 Hyper-V 的 HCN 、HCS、HDV，个人认为这是一个比较有潜力的虚拟化实现方案，至少在 API 封装上微软将其做到了简单易用，简单组装一些 API，学习其 JSON Schema 即可用 Hyper-V 启用虚拟机。</p><p>这里有一些参考实现：</p><ol><li><a href="https://github.com/microsoft/hcsshim#:~:text=Windows%20-%20Host%20Compute%20Service%20Shim.%20Contribute%20to">Hcsshim</a>,GO 语言实现，较完备。</li><li><a href="https://github.com/M2Team/NanaBox">Nanabox</a>,C++ 实现。简单易用。</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 腾讯 PCG 实习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Hyper-V </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>编译总结感想</title>
+      <link href="/posts/6663/"/>
+      <url>/posts/6663/</url>
+      
+        <content type="html"><![CDATA[<p>编译总结</p><h2 id="课程收获"><a href="#课程收获" class="headerlink" title="课程收获"></a>课程收获</h2><p><img src="提交次数.jpg" alt="161"><br>161次提交记录…….在大二的时候久闻编译强度之大，终于在这一学期也是让我真正的亲身体会了一把，但回首这几个月，除了De不出Bug时那绝望的心情，我更多的时候收获的是每一次提交时的自豪与满足。每一次De出Bug、实现功能的成就感。对编译器的理解也是从一开始抓着别人问我该做什么，变成了我知道我该做什么，我写的哪里还有不足等等。这些提升都是实打实的提升。我对编译器的理解也是随着我实践的深入逐渐清晰，原来大一大二时在我眼里十分神秘的编译器也逐渐变得明朗。这种成长的感觉非常棒，足以抵消强度之大的流言。</p><p>而且，我认为大家都说编译强度大，我现在更多的倾向是他们没有合理安排自己的时间所导致的，因为我虽然提交次数很多，但我在一学期中并没有特别明显的感受到编译实验带来的时间上的压力，这是因为我对此在开学就有一定的规划，我听取了学长们的建议，结合自己的实际下定决心从开学开始开发，到国庆就完成了不带优化的编译器的实现。这让我后面的时间极其宽松，我甚至可以放着编译实验一周而去做更为急迫的事情。也因此虽然在最后我的时间也不是很充足，但我也不像很多人一样完全缺乏时间进行优化。让我得以取得了一个较好的竞速成绩——竞速第六。也正因为此，我觉得编译原理这门课也在教导我们要学会时间管理，强度大或许只是我们的时间管理不够到位，导致在学期末没有时间而已。</p><p><img src="基本功能完成.jpg" alt="161"><br>其次我想在编译课程的末尾结合我的编译器谈谈编译的五大过程——词法分析、语法分析、语义分析、中间代码生成及优化、目标代码生成及优化。</p><h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>词法分析建立了编译器与输入文件之间的桥梁，将其转换为了编译器能够识别的单词。在我的实现中，我采用正则表达式去匹配单词。完成了这一部分的工作。</p><h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>利用前面生成的单词作为输入，结合文法生成语法树。我实现的是理论所讲的递归下降分析法，对每个非终结符都建立一个类并实现解析方法，这些非终结符之间互相调用完成语法树建立。在我的实现中，我不仅对每个非终结符建立了类，为了实现优雅，对于一些较复杂的产生式，我也生成了一些新的非终结符对其进行处理：<br>并对这一阶段会产生的语义错误进行了处理。</p><h3 id="语义分析"><a href="#语义分析" class="headerlink" title="语义分析"></a>语义分析</h3><p>在这里我单独进行了符号表的建立，而不是边建立符号表边生成中间代码，我这么做是为了中间代码生成的顺畅进行，让其可以不考虑错误的执行。同样的，我从递归下降中学到了递归相互调用的思路，调用每个非终结符下的RunSymbolBuilder来建立符号表管理并找到语义错误。</p><h3 id="中间代码生成及优化"><a href="#中间代码生成及优化" class="headerlink" title="中间代码生成及优化"></a>中间代码生成及优化</h3><p>生成我同样在语法树上进行，对每一个非终结符都实现了中间代码生成的方法。也是一种递归互相调用。我没有使用LLVM作为我的中间表达，我的中间表达设计参考了Yu-Ge编译器，使用了更接近Mips目标代码的中间表达，也是为了生成目标代码时的方便。这里我收获最大的是优化部分，如果说前面的设计包括后续的目标代码生成还有一点固定的思路在里面，那么代码优化就是天高任鸟飞的局面，只要有了点优化的想象力，都可以通过代码实现。我是非常喜欢这种事情的，而且在优化的过程中我也参考了很多前人的优化方法，阅读了许多英文论文，虽然读起来吃力，但我确实惊叹于他们的思路之巧妙，也给了我很多优化的启示。最终我完成了如下的优化：</p><p>更多的细节由于和优化文档重合，详情可以见我的优化文档。</p><h3 id="目标代码生成及优化"><a href="#目标代码生成及优化" class="headerlink" title="目标代码生成及优化"></a>目标代码生成及优化</h3><p>这里就是根据目标平台的指令集进行指令选择，将自己的中间代码转换为目标平台可以执行的汇编程序。在我的实现中，我的目标平台是Mips，对Mips指令进行了选择和优化，并做了乘除和图着色、OPT分配优化。</p><p>除此之外，我继续发扬了我在CO、OO的习惯，继续写了对编译器进行自动化测试的程序。实现了自动用gcc编译运行文件得到结果与我的编译器运行结果进行对比的功能。搜集了今年和去年两年的测试库一共141例作为了测试程序，由于去年的测试库为while语句，我还对我的测试程序集成了自动处理while为for的功能：</p><p><img src="自动处理.png" alt="自动处理"></p><p>这个测试程序帮助了我很多，大大节约了我测试的时间并极大的提高了我测试的强度。</p><p>总而言之，通过实验实打实的加深了我对理论的理解，感谢编译原理这门课提供的机会。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 北航编译原理 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 编译总结 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Mips-编译优化总结</title>
+      <link href="/posts/31035/"/>
+      <url>/posts/31035/</url>
+      
+        <content type="html"><![CDATA[<h1 id="编译优化小结"><a href="#编译优化小结" class="headerlink" title="编译优化小结"></a>编译优化小结</h1><p>21373271 任航麒</p><h2 id="优化实现概览"><a href="#优化实现概览" class="headerlink" title="优化实现概览"></a>优化实现概览</h2><h3 id="前端"><a href="#前端" class="headerlink" title="前端"></a>前端</h3><ul><li>函数内联<h3 id="中端"><a href="#中端" class="headerlink" title="中端"></a>中端</h3></li><li>单赋值形式</li><li>全局代码移动</li><li>全局值编号<ul><li>全局常量折叠</li><li>代数恒等变换 </li><li>等价指令变换</li></ul></li><li>激进死代码删除</li><li>基本块合并<h3 id="后端"><a href="#后端" class="headerlink" title="后端"></a>后端</h3></li><li>全局寄存器图着色分配</li><li>局部寄存器OPT分配</li><li>立即数乘除优化</li><li>指令选择优化</li><li>寄存器选择优化<h2 id="具体优化实现"><a href="#具体优化实现" class="headerlink" title="具体优化实现"></a>具体优化实现</h2><h3 id="函数内联"><a href="#函数内联" class="headerlink" title="函数内联"></a>函数内联</h3><h4 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h4>函数内联有两种实现方式：</li></ul><ol><li>写在中端，将函数基本块插入<code>Call</code>的位置，删除<code>Call</code>语句，处理<code>Return</code>，变量重命名。</li><li>写在前端，在生成中间代码时如果遇到了<code>Call</code>节点，直接生成一遍该<code>Call</code>调用函数的中间代码。<h4 id="难点与解决方案"><a href="#难点与解决方案" class="headerlink" title="难点与解决方案"></a>难点与解决方案</h4>第一种是最开始想到的方案，好处是可以插入优化后的函数，但比较大的问题是变量的重命名，处理起来比较麻烦，稍有不慎就会出错。</li></ol><p>因此我们选择第二种方案作为解决方案，由于中间代码生成的过程本来就是在不断的创建变量、使用变量，将内联做到此处可以让其和正常的代码归一处理，只需要考虑该函数是否适合内联即可。</p><p><img src="Mips-编译优化总结/函数内联.jpg" alt="函数内联"></p><p>如图，<code>ToIntermediate</code>即为我在语法树生成中间代码的方法，在这里展示的是<code>CallNode</code>中的<code>ToIntermediate</code>，在这里我调用了<code>FuncDefNode</code>的<code>ToIntermediate</code>将其内联到了代码中。</p><p>需要注意的一点是，第二种方法<strong>同样</strong>有着缺陷，做在了前端意味着我们做在了优化之前，而我们编译的语言中，函数传递为值传递，内联进去后我们仍然要保持这个特性，即在内联函数中，我们对参数的修改不能最终被优化为对传参变量的修改。这需要特殊判断，因此我引入了图中的<code>OptWhiteList</code>，将实参赋值给形参这种语句加入白名单，使其不被优化，这样会导致后续对形参的所有赋值均不会被优化到直接对原变量赋值。</p><h3 id="单赋值形式"><a href="#单赋值形式" class="headerlink" title="单赋值形式"></a>单赋值形式</h3><h4 id="实现方式-1"><a href="#实现方式-1" class="headerlink" title="实现方式"></a>实现方式</h4><p>我参考了课程设计网站的<code>MemToReg</code>，和虎书的<code>dominate</code>计算。</p><h4 id="难点和解决方案"><a href="#难点和解决方案" class="headerlink" title="难点和解决方案"></a>难点和解决方案</h4><p>由于前人在此做了太多的努力与积累，这里几乎不存在什么难点，按照给定的伪代码理解然后实现即可，主要就是时间投入的问题。</p><p>不过如果想要理解这些这些伪代码背后的原理和作用，可能需要结合编译理论的学习和参考虎书。</p><h3 id="全局值编号"><a href="#全局值编号" class="headerlink" title="全局值编号"></a>全局值编号</h3><h4 id="实现方式-2"><a href="#实现方式-2" class="headerlink" title="实现方式"></a>实现方式</h4><p>我参考了<code>Cliff Click</code>的<code>Global Code Motion Global Value Numbering</code>这篇论文，按照其给出的伪代码进行实现。</p><h4 id="难点和解决方案-1"><a href="#难点和解决方案-1" class="headerlink" title="难点和解决方案"></a>难点和解决方案</h4><h5 id="难点"><a href="#难点" class="headerlink" title="难点"></a>难点</h5><p>全局值编号的实现<code>Cliff Click</code>没有给予具体的实现伪代码，需要我们自行设计实现。且单全局值编号并不会给我们的代码起到什么优化作用，我们一般要同时实现在此情景下的常量折叠、代数恒等变换、等价指令变换。</p><p>其次，并不是每一条中间代码、每一种变量都适合进行三种优化，例如对刚才内联中提到的白名单内的中间代码，我们就只适合对其进行常量折叠。再比如我们不适合对全局变量进行优化，否则会导致值错误。</p><p>然后，访问块的顺序也是需要考量的，访问顺序不当会出现诸如用后面的变量替换前面的变量导致段错误等诸多问题。</p><p>最后，我们需要防止优化陷入循环，导致优化不能正常退出的问题产生。</p><h5 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h5><p><img src="Mips-编译优化总结/全局值编号.jpg" alt="全局值编号"></p><p>这是我将三种优化结合到一起的函数，先尝试折叠，再尝试代数恒等变换，最后再尝试等价指令变换。</p><p>同样，这里的<code>if else</code>也展示了我对于不同指令的处理方式有所不同，解决第二个问题的指令选择性优化，之后在具体优化的方法中检测变量类型，如果是全局就不进行优化，解决变量选择性优化问题。</p><p><img src="Mips-编译优化总结/逆后序遍历.jpg" alt="DFS_WALK"></p><p>其次是访问顺序问题，RPO（逆后序遍历）其实就是对树进行后序遍历的反向输出。我们只需用<code>DFS</code>来后序遍历树，最后反向输出即可得到<code>RPO</code>序列，采用这种方式进行的遍历我们可以保证访问子节点时父节点一定先被访问过。</p><p>最后的陷入循环主要通过两方面解决：</p><ol><li>指定我们期望的优化结果：常量为先/变换为先。这样不会出现常量和变换干扰互相死循环转化的问题。</li><li>下一个优化使用上一个优化的结果进行优化，即图中展示的<code>element</code>。</li></ol><h3 id="全局代码移动"><a href="#全局代码移动" class="headerlink" title="全局代码移动"></a>全局代码移动</h3><h4 id="实现方式-3"><a href="#实现方式-3" class="headerlink" title="实现方式"></a>实现方式</h4><p>我参考了<code>Cliff Click</code>的<code>Global Code Motion Global Value Numbering</code>这篇论文，按照其给出的伪代码进行实现。</p><h4 id="难点和解决方案-2"><a href="#难点和解决方案-2" class="headerlink" title="难点和解决方案"></a>难点和解决方案</h4><h5 id="难点-1"><a href="#难点-1" class="headerlink" title="难点"></a>难点</h5><p><code>Cliff Click</code>在论文中给出的伪代码有误，需要结合其语言描述进行正确化。不能盲目实现其伪代码。这就需要一定的英文阅读能力+理解能力。</p><p>全局代码移动需要极其严苛的正确性，这是因为对代码的移动本来就是一个高危行为，且全局值编号的优化几乎100%会破坏程序的正确性，需要全局代码移动来修复正确性，所以全局代码移动的正确实现就极为关键。</p><p>全局代码移动依然要考虑某种指令能否移动的问题。这需要小心操作。</p><h5 id="解决方案-1"><a href="#解决方案-1" class="headerlink" title="解决方案"></a>解决方案</h5><p><img src="Mips-编译优化总结/Find_LCA.jpg" alt="Find_LCA"></p><p><code>Cliff Click</code>这里给出的伪代码有误，注释强调<code>a is deeper than b</code>，但是代码却是<code>a.dom_depth &lt; b.dom_depth</code>，需要理解并修改。（当然可能是我能力不够）</p><p>为保证正确实现，至少需要保证理解全局代码移动的原理和正确性。此可以通过慢慢阅读论文，慢慢理解来最终达到。</p><p>指令是否移动，我最终设计了如下不能移动的指令类：</p><ul><li>jump和返回指令不可移动</li><li>phi指令不可移动</li><li>branch指令不可移动</li><li>call和push指令不可移动</li><li>返回值赋值语句不可移动</li><li>输入语句不可移动</li><li>store语句不可移动</li><li>load语句不可移动</li><li>Global赋值语句不可移动</li><li>Global使用语句不可移动</li></ul><p>简要说明一下不太好理解的：</p><ol><li>call和push因为涉及其他函数，我们不能保证在不同位置执行外部指令流会不会出现差异，所以不移动。</li><li>由于<code>$v0</code>的不可靠性，我在函数每次返回后都会立刻将返回值存到一个临时变量里，这个指令显然不能移动，必须时刻跟在<code>call</code>后。</li><li>store和load涉及内存读写，同样的，我们不能保证在不同位置对内存读写会不会和原指令流产生差异，所以不移动。</li><li>Global因为在别的函数中同样使用，所以也不能保证在不同位置执行外部指令流会不会出现差异。</li></ol><h3 id="激进死代码删除"><a href="#激进死代码删除" class="headerlink" title="激进死代码删除"></a>激进死代码删除</h3><h4 id="实现方式-4"><a href="#实现方式-4" class="headerlink" title="实现方式"></a>实现方式</h4><p>参考了课程网站思路和<a href="https://www.cnblogs.com/lixingyang/p/17728846.html">激进死代码删除</a>这篇文章。</p><h4 id="难点-2"><a href="#难点-2" class="headerlink" title="难点"></a>难点</h4><p>控制依赖的引入：要实现激进的死代码删除，需要我们实现控制依赖的计算，这又引入了新的复杂度。</p><p>控制流的改变：在我的实现中，我会对无用的控制流语句进行删除，改变了控制结构，这显然也是十分危险的动作，且每次修改都会导致已经建立好的流图失效，但一次优化中会多次利用到流图的信息。如何保证改变前后的控制结构等价且维护流图是一个问题。</p><h4 id="解决方案-2"><a href="#解决方案-2" class="headerlink" title="解决方案"></a>解决方案</h4><p>学习控制依赖，有一篇文章很生动形象：<a href="https://zhuanlan.zhihu.com/p/658705992">零基础入门控制依赖图构建的理论与实践</a>，通过这个我彻底理解了控制依赖的作用。</p><p><img src="Mips-编译优化总结/处理失效的控制和跳转.jpg" alt="处理失效的控制和跳转"></p><p>如图，对于一个基本块经过死代码分析后失效的控制流语句，会赋予一个新的跳转，跳到它的后继中第一个活跃的块上。需要在反支配树上寻找（反支配树就是根据CFG的反图建出的支配树）。</p><p>对流图的维护我采取了双重保险的形式：</p><ol><li>改变控制流时维护当前流图的前驱后继关系。</li><li>退出激进死代码优化时重新构建新的流图，舍去旧流图。</li></ol><p>这样一定可以保证流图的正确性，虽然会引入一定的冗余。</p><h3 id="基本块合并"><a href="#基本块合并" class="headerlink" title="基本块合并"></a>基本块合并</h3><h4 id="实现方式-5"><a href="#实现方式-5" class="headerlink" title="实现方式"></a>实现方式</h4><ol><li>相邻块跳转，一定可以删去跳转语句。</li><li>检查该块（记为A）跳转指向的块的前驱是否只有一个（A），如果只有一个，那么可以合并这两个块。</li></ol><h4 id="难点-3"><a href="#难点-3" class="headerlink" title="难点"></a>难点</h4><p>难点就是要想到上述的实现方式，特别是合并的条件，过度合并会导致问题的出现。</p><h3 id="全局寄存器图着色"><a href="#全局寄存器图着色" class="headerlink" title="全局寄存器图着色"></a>全局寄存器图着色</h3><h4 id="实现方式-6"><a href="#实现方式-6" class="headerlink" title="实现方式"></a>实现方式</h4><p>虎书有更为精细复杂的图着色实现方式，可以减轻<code>Move</code>指令带来的负向优化。</p><p>时间原因，我采用了理论所学的图着色实现方式：</p><ol><li>def-use分析</li><li>in-out分析</li><li>构建冲突图</li><li>启发式着色</li></ol><h4 id="难点-4"><a href="#难点-4" class="headerlink" title="难点"></a>难点</h4><ol><li>需要考虑着色的变量范围。</li><li>冲突的识别。</li></ol><h4 id="解决方案-3"><a href="#解决方案-3" class="headerlink" title="解决方案"></a>解决方案</h4><ul><li>全局变量不能参与图着色，最主要的问题是，图着色是不写回的，而全局寄存器显然需要写回，因为要在多个函数中用到。这从一开始就已经产生了冲突。</li><li>不跨块活跃的不参与图着色，对其的分配无意义。</li><li>冲突的识别<strong>不能仅仅参考<code>In-Out</code></strong>，需要用比较精细的分配方式——在a的定义点b活跃。这里就是一个仅仅参考<code>In-Out</code>导致分配错误的例子：</li></ul><p><img src="Mips-编译优化总结/In-Out.jpg" alt="In-Out"></p><p>如果仅仅从In集分析，<code>Variable_6_2</code>一定与<code>Variable_8_7</code>不冲突，可以共用一个寄存器，图中的分配也是这么做的，但显然是错误的，这就是因为<code>Variable_6_2</code>和<code>Variable_8_7</code>其实是冲突的，这需要使用上述提到的精细的分析才能找出冲突。</p><h3 id="局部寄存器OPT分配"><a href="#局部寄存器OPT分配" class="headerlink" title="局部寄存器OPT分配"></a>局部寄存器OPT分配</h3><h4 id="实现方式-7"><a href="#实现方式-7" class="headerlink" title="实现方式"></a>实现方式</h4><p>寄存器可以用<code>Cache</code>去理解，那么我们就可以参考<code>Cache</code>的分配方式。<code>Cache</code>有一个理想的分配方式——OPT分配，所有的分配算法都是为了接近这种分配，但是这种分配是不可能达到的，因为<code>Cache</code>不可能知道未来的信息。</p><p>但在编译的寄存器分配中，我们是可以知道的。因此我们可以实现<code>Cache</code>分配的极限——Opt优化。</p><p>替换寄存器时，我们可以向后查看该基本块对于变量的使用情况，替换掉最晚使用的寄存器。</p><h4 id="难点-5"><a href="#难点-5" class="headerlink" title="难点"></a>难点</h4><p>本身没有什么难度，难度来源于如果想让全局变量加入局部寄存器的分配，会引入很多的问题：</p><ol><li>在原来的设计中，局部寄存器也不需要在退出基本块前写回，全局变量显然需要。</li><li>也正是由于有（1）的区别所在，所以在OPT分配的时候全局变量控制的局部寄存器和其他变量控制的局部寄存器是有区别的。引入了复杂度。<h4 id="解决方案-4"><a href="#解决方案-4" class="headerlink" title="解决方案"></a>解决方案</h4></li><li>添加写回逻辑，只针对寄存器分配的对线是全局寄存器时。</li><li>OPT逻辑设计如下图(参考注释)<br><img src="Mips-编译优化总结/OPT调度.jpg" alt="Opt调度"></li></ol><h3 id="立即数乘除优化"><a href="#立即数乘除优化" class="headerlink" title="立即数乘除优化"></a>立即数乘除优化</h3><h4 id="实现方式-8"><a href="#实现方式-8" class="headerlink" title="实现方式"></a>实现方式</h4><ul><li>参考<code>Division by Invariant Integers using Multiplication</code></li><li>参考课程网站教程</li><li>参考Yu-Ge编译器</li></ul><h4 id="难点-6"><a href="#难点-6" class="headerlink" title="难点"></a>难点</h4><p>如果想要理解此优化，确实是极其消耗时间的事情。</p><h4 id="解决方案-5"><a href="#解决方案-5" class="headerlink" title="解决方案"></a>解决方案</h4><p>时间太过仓促，我也只是草草理解了一下就按照伪代码和参考Yu-Ge编译器进行了实现。</p><h3 id="指令选择优化"><a href="#指令选择优化" class="headerlink" title="指令选择优化"></a>指令选择优化</h3><h4 id="实现方式-9"><a href="#实现方式-9" class="headerlink" title="实现方式"></a>实现方式</h4><p>对mars需要展开的指令进行优化，尽量减轻展开量。</p><h4 id="难点-7"><a href="#难点-7" class="headerlink" title="难点"></a>难点</h4><p>如何寻找到更优秀的展开是一个问题。</p><h4 id="解决方案-6"><a href="#解决方案-6" class="headerlink" title="解决方案"></a>解决方案</h4><p>这和Mips指令强相关，今年我参加了龙芯Mips赛道，对此也有一定的理解，手动写了一些。</p><p>这和Mips指令强相关，因此我参考了前高阶计组助教——陈昊学长对此的优化。</p><p><img src="Mips-编译优化总结/加载常数.jpg" alt="加载常数"></p><p>例如对于常数的加载，就可以根据范围选择不同的加载方式。这里就涉及了<code>Mips</code>指令集中<code>Offset=16</code>等的知识。</p><h3 id="寄存器选择优化"><a href="#寄存器选择优化" class="headerlink" title="寄存器选择优化"></a>寄存器选择优化</h3><h4 id="实现方式-10"><a href="#实现方式-10" class="headerlink" title="实现方式"></a>实现方式</h4><p>主要是将加载0值到寄存器的操作直接使用<code>$0</code>替换。</p><h4 id="难点-8"><a href="#难点-8" class="headerlink" title="难点"></a>难点</h4><p>注意细心即可。</p><h4 id="解决方案-7"><a href="#解决方案-7" class="headerlink" title="解决方案"></a>解决方案</h4><p>多进行测试，避免写出问题。</p><h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>在竞速排名中，我的排名是第六。</p><p>说这个不是一个好的成绩有些过分，但实话说我还是对此有一定的遗憾，因为很多很棒的优化我因为时间的关系都没有实现，例如对于公开的测试用例，如果我做了循环优化，对那个用例的数组的运算完全可以优化到直接赋值的地步。又比如对于全局变量的初始化，完全可以借助<code>.space</code>进行初始化，这些都因为时间关系，在我的编译器中没有实现。</p><p>很多人说做优化性价比不高，因此大多都摆烂了，但对我来说，做优化是完全的出于兴趣，我觉得看着自己的目标代码逐渐瘦身，<del>逐渐变得我都看不明白但就是正确的</del>，是一件很酷的事情。但就是时间太过于紧张只能让我做出取舍。这让我感到遗憾。</p><p>不过，这也不是结束，这更像是一个开始。竞速第六便是一个很好的开始，希望以后还有机会，有更多的时间做这种类似的事情吧！</p><p>感谢一学期所有编译助教的辛苦付出，申哥的挽大厦之将倾，陈昊学长的分享与帮助。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 北航编译原理 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 编译优化 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ARMv8 学习</title>
+      <link href="/posts/50082/"/>
+      <url>/posts/50082/</url>
+      
+        <content type="html"><![CDATA[<h2 id="ARMv8-初步"><a href="#ARMv8-初步" class="headerlink" title="ARMv8 初步"></a>ARMv8 初步</h2><ul><li>ARMv8 定义了两种执行状态，AArch64 和 AArch 32</li><li>AArch64 最多可以在寄存器中传递 8 个参数</li><li>AArch32 最多可以在寄存器中传递 4 个参数  </li><li>ARMv8 中，执行发生在 4 个异常级别之一，异常级别决定了特权级别。</li></ul><div class="table-container"><table><thead><tr><th>异常级别</th><th>解释</th></tr></thead><tbody><tr><td>EL0</td><td>普通用户的用户程序</td></tr><tr><td>EL1</td><td>操作系统内核，通常说是有特权的</td></tr><tr><td>EL2</td><td>Hypervisor(虚拟机管理程序)</td></tr><tr><td>EL3</td><td>底层固件，包括安全监视器</td></tr></tbody></table></div><ul><li>ARMv8 也提供了两种安全状态：安全状态和非安全状态，这种保护使得普通操作系统和受信操作系统可以安全的同时运行在同一操作系统上。</li><li><p>ARMv8 中 EL3 的安全监视器充当普通和安全世界之间切换的网关</p></li><li><p>AArch 64 异常级别和安全状态组织形式如下</p></li></ul><p><img src="AArch64 异常组织形式.png" alt="AArch64 异常组织形式.png"></p><ul><li>AArch 32 异常级别和安全状态组织形式如下</li></ul><p><img src="AArch32 异常组织形式.png" alt="AArch32 异常组织形式.png"></p><ul><li>只能通过改变异常级别来改变执行状态。对异常的处理可能从AArch32更改为AArch64，从异常返回可能从AArch64更改为AArch32。</li></ul><div class="note purple no-icon flat"><p>不能反着来是因为一个AArch32操作系统不能承载64位的应用程序，或者说一个AArch32Hypervisor不能承载64位的系统。</p></div><p><img src="执行状态切换.png" alt="执行状态切换.png"></p><h2 id="ARMv8-寄存器"><a href="#ARMv8-寄存器" class="headerlink" title="ARMv8 寄存器"></a>ARMv8 寄存器</h2><h3 id="通用寄存器"><a href="#通用寄存器" class="headerlink" title="通用寄存器"></a>通用寄存器</h3><ul><li>AArch 64 执行状态提供了 31 x 64 位的通用寄存器，可以在任何时间和所有异常级别访问。每个寄存器是64位宽，它们通常被称为X0-X30寄存器。</li></ul><p><img src="ARMv8通用寄存器.png" alt="ARMv8通用寄存器.png"></p><ul><li>每个AArch64 64位通用寄存器(X0-X30)也有一个32位(W0-W30)形式</li></ul><p><img src="Wn和Xn.png" alt="Wn和Xn.png"></p><ul><li>W寄存器读取时忽略相应X寄存器的高32位,写入W寄存器则将其余高位设置为0.</li></ul><h3 id="专用寄存器"><a href="#专用寄存器" class="headerlink" title="专用寄存器"></a>专用寄存器</h3><p><img src="特殊寄存器.png" alt="特殊寄存器.png"></p><ul><li><p>没有真正意义上的 31 号寄存器，很多时候都代表零寄存器，在某些特殊指令中也代表 SP 寄存器。</p></li><li><p>访问零寄存器时，所有读操作都返回 0 ，所有写操作无效，这点和 MIPS 很像。</p></li><li><p>当在AArch64中处于非EL0异常级别时，处理器可以使用以下两种寄存器：与异常级别关联的专用64位堆栈指针(SP_ELn)，或者 EL0 的堆栈指针（SP_EL0）</p></li><li><p>ELR 保存异常返回地址，和 MIPS 中的 EPC 很像</p></li><li><p>SPSR 当捕获一个异常时，处理器状态存储在相关的Saved Program Status register(SPSR)中，类似于ARMv7中的CPSR。SPSR在捕获异常之前保存ch（处理器状态）的值，并用于在执行异常返回时恢复PSTATE（处理器状态）的值。</p></li></ul><p><img src="SPSR.png" alt="SPSR.png"></p><p><img src="SPSR解释.png" alt="SPSR解释.png"></p><ul><li>在ARMv8中，对SPSR的写入依赖于异常级别。如果在EL1中发生异常，则使用SPSR_EL1。如果在EL2中发生异常，则使用SPSR_EL2，如果在EL3中发生异常，则使用SPSR_EL3。当发生异常时，核心要填充SPSR。</li></ul><h3 id="系统寄存器"><a href="#系统寄存器" class="headerlink" title="系统寄存器"></a>系统寄存器</h3><ul><li><p>在AArch64中，系统配置通过系统寄存器进行控制，并使用MSR和MRS指令来获取、更改系统寄存器的值。</p></li><li><p>寄存器的名字告诉你可以访问它的最低的异常级别，这点与专用寄存器有所差别</p></li></ul><p><img src="系统寄存器-1.png" alt="系统寄存器-1.png"></p><p><img src="系统寄存器-2.png" alt="系统寄存器-2.png"></p><p><img src="系统寄存器-3.png" alt="系统寄存器-3.png"></p><p><img src="系统寄存器-4.png" alt="系统寄存器-4.png"></p><p><img src="系统寄存器-5.png" alt="系统寄存器-5.png"></p><h4 id="系统控制寄存器"><a href="#系统控制寄存器" class="headerlink" title="系统控制寄存器"></a>系统控制寄存器</h4><p><img src="SCTLR.png" alt="SCTLR.png"></p><ul><li>并非所有位在EL1以上都可用。每个位代表以下内容</li></ul><p><img src="SCTLR字段-1.png" alt="SCTLR字段-1.png"></p><p><img src="SCTLR字段-2.png" alt="SCTLR字段-2.png"></p><h2 id="浮点寄存器"><a href="#浮点寄存器" class="headerlink" title="浮点寄存器"></a>浮点寄存器</h2><ul><li>除了通用寄存器外，ARMv8还有32个128位浮点寄存器，标记为V0-V31。32个寄存器用于保存标量浮点指令的浮点操作数，以及NEON操作的标量和向量操作数。</li></ul><h2 id="ARMv8-处理器状态"><a href="#ARMv8-处理器状态" class="headerlink" title="ARMv8 处理器状态"></a>ARMv8 处理器状态</h2><ul><li><p>处理器状态作为字段提供</p></li><li><p>定义如下</p></li></ul><p><img src="PSR.png" alt="PSR.png"></p><div class="note purple no-icon flat"><p>细心的话会发现这个字段定义和 SPSR 的字段高度类似，正如前面所说，异常时处理器状态就是被保存在 SPSR 中的。</p></div><h2 id="ARMv8-指令集"><a href="#ARMv8-指令集" class="headerlink" title="ARMv8 指令集"></a>ARMv8 指令集</h2><ul><li>指令集中的指令仍然是 32 位长</li></ul><h3 id="数据处理指令"><a href="#数据处理指令" class="headerlink" title="数据处理指令"></a>数据处理指令</h3><p><code>Instruction Rd, Rn, Operand2</code></p><ul><li>R 代表这里可以是X寄存器，也可以是W寄存器</li><li>D 代表这里是目标寄存器</li></ul><h4 id="算术和逻辑运算"><a href="#算术和逻辑运算" class="headerlink" title="算术和逻辑运算"></a>算术和逻辑运算</h4><p><img src="算术和逻辑运算.png" alt="算术和逻辑运算.png"></p><ul><li><p>有些指令还带有S后缀，表示该指令设置了标志。表6-1中的说明包括:ADDS、SUBS、ADCS、SBCS、ANDS和BICS。还有其他的标志设置指令，特别是CMP、CMN和TST，但它们没有S后缀，因为它们必然会设置标志。</p></li><li><p>ADD 加法，SUB 减法，ADC 带进位加法，SBC 带进位减法，NEG 求补</p></li><li>AND 与运算，BIC 对 Rn 中的值 和 Operand2 值的反码按位进行逻辑“与”运算，ORR 或运算，ORN 对第二个操作数的按位取反后执行或，EOR 异或运算，EON 对第二个操作数的按位取反后执行异或。</li><li>CMP 的比较方式：<code>op1 - (op2)</code>，CMN 的比较方式： <code>op1 - (-op2)</code>，TST 用来测试某一位或某几位是 0 还是 1。</li><li>MOV 移动值，MON 用它赋值的时候，先按位取反。</li></ul><h4 id="乘和除指令"><a href="#乘和除指令" class="headerlink" title="乘和除指令"></a>乘和除指令</h4><div class="table-container"><table><thead><tr><th>指令名</th><th>解释</th></tr></thead><tbody><tr><td>MADD</td><td>乘后加</td></tr><tr><td>MNEG</td><td>乘后取相反数</td></tr><tr><td>MSUB</td><td>乘后减</td></tr><tr><td>NUL</td><td>乘</td></tr><tr><td>SMADDL</td><td>对 Long 型做有符号的乘加运算</td></tr><tr><td>SMNEGL</td><td>对 Long 型做有符号的乘再取相反数运算</td></tr><tr><td>SMSUBL</td><td>对 Long 型做有符号的乘减运算</td></tr><tr><td>SMULH</td><td>返回高半部分的有符号乘</td></tr><tr><td>SMULL</td><td>对 Long 型做有符号的乘运算</td></tr><tr><td>UMADDL</td><td>对 Long 型做无符号的乘加运算</td></tr><tr><td>UMNEGL</td><td>对 Long 型做无符号的乘再取相反数运算</td></tr><tr><td>UMSUBL</td><td>对 Long 型做无符号的乘减运算</td></tr><tr><td>UMULH</td><td>返回高半部分的无符号乘</td></tr><tr><td>UMULL</td><td>对 Long 型 做无符号的乘运算</td></tr><tr><td>SDIV</td><td>有符号的除法</td></tr><tr><td>UDIV</td><td>无符号的除法</td></tr></tbody></table></div><div class="note green no-icon flat"><p>强调这么多的 Long 型乘法目的是在于强调 ARMv8 采用 64 位寄存器后的优越所在。一条指令即可完成 64 位的运算。</p></div><h4 id="移位操作"><a href="#移位操作" class="headerlink" title="移位操作"></a>移位操作</h4><div class="table-container"><table><thead><tr><th>指令名</th><th>解释</th></tr></thead><tbody><tr><td>LSL</td><td>逻辑左移</td></tr><tr><td>LSR</td><td>逻辑右移</td></tr><tr><td>ASR</td><td>算术右移</td></tr><tr><td>ROR</td><td>旋转右移</td></tr></tbody></table></div><p><img src="位运算图解.png" alt="位运算图解.png"></p><h4 id="位域和字节操作指令"><a href="#位域和字节操作指令" class="headerlink" title="位域和字节操作指令"></a>位域和字节操作指令</h4><div class="table-container"><table><thead><tr><th>指令名</th><th>解释</th></tr></thead><tbody><tr><td>SXTB</td><td>复制最高位将 8 位扩展到 64 位</td></tr><tr><td>CLZ</td><td>计算在寄存器中前导零的个数</td></tr><tr><td>RBIT</td><td>反转所有位</td></tr><tr><td>REV</td><td>反转寄存器的字节顺序</td></tr><tr><td>REV16</td><td>反转寄存器中每个半字的字节顺序</td></tr><tr><td>REV32</td><td>反转寄存器中每个字的字节顺序</td></tr></tbody></table></div><p>REV16图解：</p><p><img src="REV16.png" alt="REV16.png"></p><p>REV32图解：</p><p><img src="REV32.png" alt="REV32.png"></p><div class="note green no-icon flat"><p>这个可用来切换大小端序。</p></div>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ARM 体系结构 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>VirtualBox 系统盘无损扩容</title>
       <link href="/posts/17528/"/>
       <url>/posts/17528/</url>
@@ -1199,22 +1299,22 @@
     
     
     <entry>
-      <title>archives</title>
-      <link href="/archives/index.html"/>
-      <url>/archives/index.html</url>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <url>/about/index.html</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[<ul><li>2021-2025 北航<br>感恩每一次相遇！</li></ul>]]></content>
       
     </entry>
     
     
     
     <entry>
-      <title>关于</title>
-      <link href="/about/index.html"/>
-      <url>/about/index.html</url>
+      <title>archives</title>
+      <link href="/archives/index.html"/>
+      <url>/archives/index.html</url>
       
-        <content type="html"><![CDATA[<ul><li>2021-2025 北航<br>感恩每一次相遇！</li></ul>]]></content>
+        <content type="html"><![CDATA[]]></content>
       
     </entry>
     
@@ -1232,22 +1332,22 @@
     
     
     <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
+      <title>音乐</title>
+      <link href="/music/index.html"/>
+      <url>/music/index.html</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=780 height=900 src="//music.163.com/outchain/player?type=0&id=8106272779&auto=1&height=430"></iframe>]]></content>
       
     </entry>
     
     
     
     <entry>
-      <title>音乐</title>
-      <link href="/music/index.html"/>
-      <url>/music/index.html</url>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
       
-        <content type="html"><![CDATA[<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=780 height=900 src="//music.163.com/outchain/player?type=0&id=8106272779&auto=1&height=430"></iframe>]]></content>
+        <content type="html"><![CDATA[]]></content>
       
     </entry>
     
@@ -1265,9 +1365,9 @@
     
     
     <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
