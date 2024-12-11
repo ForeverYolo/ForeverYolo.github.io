@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>ARM-Gicv2 第一章学习 | ForeverYolo的博客</title><meta name="author" content="ForeverYolo"><meta name="copyright" content="ForeverYolo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="介绍GIC 功能 为管理中断资源、中断行为进行注册，并对中断进行路由。 支持 ARM 安全扩展、虚拟化扩展 启用、禁用来自硬件的中断 SGI（软件中断） 中断掩码和优先级设置 在电源管理环境中产生唤醒事件。GIC 分组 将每个中断配置为组 0 或者组 1。 将组 0 的中断以 IRQ 或者 FIQ 的形式发到处理器。 将组 1 的中断以 IRQ 的形式发送到处理器。 以一个统一的表来处理组0组1中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ARM-Gicv2 第一章学习">
+<meta property="og:url" content="https://foreveryolo.github.io/posts/59403/index.html">
+<meta property="og:site_name" content="ForeverYolo的博客">
+<meta property="og:description" content="介绍GIC 功能 为管理中断资源、中断行为进行注册，并对中断进行路由。 支持 ARM 安全扩展、虚拟化扩展 启用、禁用来自硬件的中断 SGI（软件中断） 中断掩码和优先级设置 在电源管理环境中产生唤醒事件。GIC 分组 将每个中断配置为组 0 或者组 1。 将组 0 的中断以 IRQ 或者 FIQ 的形式发到处理器。 将组 1 的中断以 IRQ 的形式发送到处理器。 以一个统一的表来处理组0组1中">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s21.ax1x.com/2024/12/11/pAHbWEq.png">
+<meta property="article:published_time" content="2024-11-14T09:08:21.000Z">
+<meta property="article:modified_time" content="2024-12-11T08:36:06.868Z">
+<meta property="article:author" content="ForeverYolo">
+<meta property="article:tag" content="ARM 体系结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s21.ax1x.com/2024/12/11/pAHbWEq.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://foreveryolo.github.io/posts/59403/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="baidu-site-verification" content="3cb4bb475c7dde65b56ca90f7afdabed"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  }
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ARM-Gicv2 第一章学习',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-12-11 16:36:06'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/iconfont.css"><link rel="stylesheet" href="/css/myStyle.css"><link rel="stylesheet" href="/css/myIco.css"><link rel="stylesheet" href="/css/fontsetting.css"><script defer src="/live2d-widget-master/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">59</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">31</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://s21.ax1x.com/2024/12/11/pAHbWEq.png')"><nav id="nav"><span id="blog-info"><a href="/" title="ForeverYolo的博客"><span class="site-name">ForeverYolo的博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-video"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">ARM-Gicv2 第一章学习</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-11-14T09:08:21.000Z" title="发表于 2024-11-14 17:08:21">2024-11-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-12-11T08:36:06.868Z" title="更新于 2024-12-11 16:36:06">2024-12-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Hypervisor-%E5%AD%A6%E4%B9%A0/">Hypervisor 学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">897</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="ARM-Gicv2 第一章学习"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><h2 id="GIC-功能"><a href="#GIC-功能" class="headerlink" title="GIC 功能"></a>GIC 功能</h2><ul>
+<li>为管理中断资源、中断行为进行注册，并对中断进行路由。</li>
+<li>支持 ARM 安全扩展、虚拟化扩展</li>
+<li>启用、禁用来自硬件的中断</li>
+<li>SGI（软件中断）</li>
+<li>中断掩码和优先级设置</li>
+<li>在电源管理环境中产生唤醒事件。<h2 id="GIC-分组"><a href="#GIC-分组" class="headerlink" title="GIC 分组"></a>GIC 分组</h2></li>
+<li>将每个中断配置为组 0 或者组 1。</li>
+<li>将组 0 的中断以 IRQ 或者 FIQ 的形式发到处理器。</li>
+<li>将组 1 的中断以 IRQ 的形式发送到处理器。</li>
+<li>以一个统一的表来处理组0组1中断的优先级。</li>
+<li>对组0的某些中断可以锁定。<blockquote><p>在许多 ARM 架构的实现中，IRQ 和 FIQ 中断请求对应于 IRQ 和 FIQ 异步异常。</p>
+</blockquote>
+<h2 id="GIC-安全支持"><a href="#GIC-安全支持" class="headerlink" title="GIC 安全支持"></a>GIC 安全支持</h2>对于实现了安全扩展的处理器：</li>
+<li>组 0 中断为安全中断、组 1 中断为非安全中断。</li>
+<li>处理器对 GIC 寄存器的访问分为安全与非安全。<ul>
+<li>非安全访问只能读写控制非安全中断的寄存器。</li>
+<li>安全访问可以读写任意寄存器。</li>
+</ul>
+</li>
+<li>安全系统软件单独将每个已实施的中断定义为安全和非安全。<h2 id="GIC-虚拟化支持"><a href="#GIC-虚拟化支持" class="headerlink" title="GIC 虚拟化支持"></a>GIC 虚拟化支持</h2>支持对于虚拟中断的处理，降低 Hypervisor 路由中断到虚拟机的开销。<h1 id="术语介绍"><a href="#术语介绍" class="headerlink" title="术语介绍"></a>术语介绍</h1><h2 id="中断状态"><a href="#中断状态" class="headerlink" title="中断状态"></a>中断状态</h2></li>
+<li>Inactive: 中断是未触发或者不在等待被处理。</li>
+<li>Pending： 中断已经被触发，等待目标处理器处理。</li>
+<li>Active: 中断已经被目标处理器确认，正在处理中。</li>
+<li>Active and pending：中断正在被目标处理器处理，与此同时有一个一样的中断等待被处理。<h2 id="中断类型"><a href="#中断类型" class="headerlink" title="中断类型"></a>中断类型</h2><h3 id="外设中断"><a href="#外设中断" class="headerlink" title="外设中断"></a>外设中断</h3></li>
+<li>PPI：私有外设中断，需要指定处理器处理的中断。</li>
+<li>SPI：共享外设中断，可以被指定的一组寄存器处理的中断。<blockquote><p>外设中断在电平上分为两种：</p>
+<ol>
+<li>边沿触发：上升沿触发，一直保持中断触发状态直到被处理。</li>
+<li>电平触发：在高电平时触发，要么被处理、要么回到低电平则撤销中断触发。</li>
+</ol>
+</blockquote>
+<h3 id="软件中断"><a href="#软件中断" class="headerlink" title="软件中断"></a>软件中断</h3></li>
+<li>通过软件写 GICD_SGIR 寄存器触发。用来进行核间通信。</li>
+<li>软中断的触发属性和边沿触发一致。</li>
+<li>当 SGI 软件中断触发时，通过 GICC_IAR 或者 GICC_AIAR 识别请求中断的处理器 ID。<blockquote><p>对于实现了虚拟扩展的GIC：</p>
+<ol>
+<li>SGI 发生时，在 GIC 虚拟扩展中的管理寄存器将允许将请求中断的CPU报告给虚拟机。</li>
+<li>通过写管理寄存器，Hypervisor可以产生一个在虚拟机表现为SGI的虚拟中断。</li>
+</ol>
+</blockquote>
+<h3 id="虚拟中断"><a href="#虚拟中断" class="headerlink" title="虚拟中断"></a>虚拟中断</h3>发给某一个运行在处理器上的虚拟机的中断。<h3 id="维护中断"><a href="#维护中断" class="headerlink" title="维护中断"></a>维护中断</h3>一个电平触发的中断，来揭示关键事件，例如一组中断被启用了。<h2 id="中断模型"><a href="#中断模型" class="headerlink" title="中断模型"></a>中断模型</h2><h3 id="1-N-模型"><a href="#1-N-模型" class="headerlink" title="1-N 模型"></a>1-N 模型</h3>中断发给多个处理器，但只需要一个处理器处理。<h3 id="N-N-模型"><a href="#N-N-模型" class="headerlink" title="N-N 模型"></a>N-N 模型</h3>中断发给多个处理器，每个处理器都要处理这个中断。<h2 id="虚假中断"><a href="#虚假中断" class="headerlink" title="虚假中断"></a>虚假中断</h2>在 GIC 将中断分发给 CPU 后，此中断不再被需要是可能的。所以在 CPU 确认此中断时，GIC 将会返回一个特殊的中断ID表面此中断是一个虚假中断。<h3 id="Banking"><a href="#Banking" class="headerlink" title="Banking"></a>Banking</h3></li>
+<li>中断 Banking：一组中断在GIC表现为同一个中断号，通过中断号和关联CPU进行区分。</li>
+<li>寄存器 Banking: 同一地址存在多个复制体寄存器。</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io">ForeverYolo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://foreveryolo.github.io/posts/59403/">https://foreveryolo.github.io/posts/59403/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://foreveryolo.github.io" target="_blank">ForeverYolo的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/ARM-%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/">ARM 体系结构</a></div><div class="post_share"><div class="social-share" data-image="https://s21.ax1x.com/2024/12/11/pAHbWEq.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/28608/" title="ARM-Gicv2 第二章学习"><img class="cover" src="https://s21.ax1x.com/2024/12/11/pAHbUHI.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">ARM-Gicv2 第二章学习</div></div></a></div><div class="next-post pull-right"><a href="/posts/2/" title="ZCU102提升-PL 协同 PS"><img class="cover" src="https://s21.ax1x.com/2024/10/19/pAaPV1J.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">ZCU102提升-PL 协同 PS</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/posts/50082/" title="ARMv8 学习"><img class="cover" src="https://s1.ax1x.com/2023/08/05/pPkxoZQ.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-05</div><div class="title">ARMv8 学习</div></div></a></div><div><a href="/posts/51163/" title="ARM-Gicv2 第三章学习"><img class="cover" src="https://s21.ax1x.com/2024/12/11/pAHb2bn.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-11-16</div><div class="title">ARM-Gicv2 第三章学习</div></div></a></div><div><a href="/posts/57122/" title="ARM-Gicv2 第四章学习"><img class="cover" src="https://s21.ax1x.com/2024/12/11/pAHbgDs.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-11-17</div><div class="title">ARM-Gicv2 第四章学习</div></div></a></div><div><a href="/posts/28608/" title="ARM-Gicv2 第二章学习"><img class="cover" src="https://s21.ax1x.com/2024/12/11/pAHbUHI.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-11-15</div><div class="title">ARM-Gicv2 第二章学习</div></div></a></div><div><a href="/posts/39082/" title="ATF Uboot Linux 交叉编译命令留档"><img class="cover" src="https://s21.ax1x.com/2024/12/11/pAHbcuj.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-11-25</div><div class="title">ATF Uboot Linux 交叉编译命令留档</div></div></a></div></div></div><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="lv-container" data-id="city" data-uid="MTAyMC81ODA1MC8zNDUxMw"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ForeverYolo</div><div class="author-info__description">这是ForeverYolo的博客网站</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">59</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">31</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ForeverYolo/"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ForeverYolo/" target="_blank" title=""><i class="fab fa-github"></i></a><a class="social-icon" href="tencent://message/?uin=2572131118&amp;Site=Sambow&amp;Menu=yes" target="_blank" title="QQ"><i class="iconfont icon-QQ"></i></a><a class="social-icon" href="mailto:2572131118@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">北航在线打工人Orz</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.</span> <span class="toc-text">介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#GIC-%E5%8A%9F%E8%83%BD"><span class="toc-number">1.1.</span> <span class="toc-text">GIC 功能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GIC-%E5%88%86%E7%BB%84"><span class="toc-number">1.2.</span> <span class="toc-text">GIC 分组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GIC-%E5%AE%89%E5%85%A8%E6%94%AF%E6%8C%81"><span class="toc-number">1.3.</span> <span class="toc-text">GIC 安全支持</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GIC-%E8%99%9A%E6%8B%9F%E5%8C%96%E6%94%AF%E6%8C%81"><span class="toc-number">1.4.</span> <span class="toc-text">GIC 虚拟化支持</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9C%AF%E8%AF%AD%E4%BB%8B%E7%BB%8D"><span class="toc-number">2.</span> <span class="toc-text">术语介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E7%8A%B6%E6%80%81"><span class="toc-number">2.1.</span> <span class="toc-text">中断状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.2.</span> <span class="toc-text">中断类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%96%E8%AE%BE%E4%B8%AD%E6%96%AD"><span class="toc-number">2.2.1.</span> <span class="toc-text">外设中断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BD%AF%E4%BB%B6%E4%B8%AD%E6%96%AD"><span class="toc-number">2.2.2.</span> <span class="toc-text">软件中断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E4%B8%AD%E6%96%AD"><span class="toc-number">2.2.3.</span> <span class="toc-text">虚拟中断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%B4%E6%8A%A4%E4%B8%AD%E6%96%AD"><span class="toc-number">2.2.4.</span> <span class="toc-text">维护中断</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.3.</span> <span class="toc-text">中断模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-N-%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.3.1.</span> <span class="toc-text">1-N 模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#N-N-%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.3.2.</span> <span class="toc-text">N-N 模型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%99%9A%E5%81%87%E4%B8%AD%E6%96%AD"><span class="toc-number">2.4.</span> <span class="toc-text">虚假中断</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Banking"><span class="toc-number">2.4.1.</span> <span class="toc-text">Banking</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/56859/" title="ARM-Trusted-Firmware 学习"><img src="https://s21.ax1x.com/2024/12/11/pAHbyvQ.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ARM-Trusted-Firmware 学习"/></a><div class="content"><a class="title" href="/posts/56859/" title="ARM-Trusted-Firmware 学习">ARM-Trusted-Firmware 学习</a><time datetime="2024-12-05T09:08:21.000Z" title="发表于 2024-12-05 17:08:21">2024-12-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/39082/" title="ATF Uboot Linux 交叉编译命令留档"><img src="https://s21.ax1x.com/2024/12/11/pAHbcuj.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ATF Uboot Linux 交叉编译命令留档"/></a><div class="content"><a class="title" href="/posts/39082/" title="ATF Uboot Linux 交叉编译命令留档">ATF Uboot Linux 交叉编译命令留档</a><time datetime="2024-11-25T09:08:21.000Z" title="发表于 2024-11-25 17:08:21">2024-11-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/57122/" title="ARM-Gicv2 第四章学习"><img src="https://s21.ax1x.com/2024/12/11/pAHbgDs.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ARM-Gicv2 第四章学习"/></a><div class="content"><a class="title" href="/posts/57122/" title="ARM-Gicv2 第四章学习">ARM-Gicv2 第四章学习</a><time datetime="2024-11-17T09:08:21.000Z" title="发表于 2024-11-17 17:08:21">2024-11-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/51163/" title="ARM-Gicv2 第三章学习"><img src="https://s21.ax1x.com/2024/12/11/pAHb2bn.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ARM-Gicv2 第三章学习"/></a><div class="content"><a class="title" href="/posts/51163/" title="ARM-Gicv2 第三章学习">ARM-Gicv2 第三章学习</a><time datetime="2024-11-16T09:08:21.000Z" title="发表于 2024-11-16 17:08:21">2024-11-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/28608/" title="ARM-Gicv2 第二章学习"><img src="https://s21.ax1x.com/2024/12/11/pAHbUHI.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ARM-Gicv2 第二章学习"/></a><div class="content"><a class="title" href="/posts/28608/" title="ARM-Gicv2 第二章学习">ARM-Gicv2 第二章学习</a><time datetime="2024-11-15T09:08:21.000Z" title="发表于 2024-11-15 17:08:21">2024-11-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ForeverYolo</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>function loadLivere () {
+  if (typeof LivereTower === 'object') {
+    window.LivereTower.init()
+  }
+  else {
+    (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  }
+}
+
+if ('Livere' === 'Livere' || !false) {
+  if (false) btf.loadComment(document.getElementById('lv-container'), loadLivere)
+  else loadLivere()
+}
+else {
+  function loadOtherComment () {
+    loadLivere()
+  }
+}</script></div><script src="/js/jquery.js"></script><script src="/js/foot.js"></script><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.8" zIndex="-1" count="150" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="true" data-text="青青子衿，悠悠我心。,纵我不往，子宁不嗣音？,青青子佩，悠悠我思。,纵我不往，子宁不来？,挑兮达兮，在城阙兮。,一日不见，如三月兮。,野有蔓草，零露漙兮。,有美一人，清扬婉兮。,邂逅相遇，适我愿兮。,野有蔓草，零露瀼瀼。,有美一人，婉如清扬。,邂逅相遇，与子偕臧。,没啦！别点啦!要循环啦!" data-fontsize="20px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

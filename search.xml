@@ -4,6 +4,160 @@
   
     
     <entry>
+      <title>ARM-Trusted-Firmware 学习</title>
+      <link href="/posts/56859/"/>
+      <url>/posts/56859/</url>
+      
+        <content type="html"><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在 ARMv8 之后，Uboot 在启动前需要先进行 ATF 的初始化，为了充分了解启动过程，对 ATF 进行了一波学习，总结在此篇文章中。</p><h1 id="ATF-概念"><a href="#ATF-概念" class="headerlink" title="ATF 概念"></a>ATF 概念</h1><p>安全是操作系统领域这些年经常提到的话题，TF（Trusted Firmware）是 ARM 为了提升安全在 ARMv8 引入的安全解决方案，其包括了启动和运行过程中的特权级划分。由于 TF 是 ARM 引入，所以也叫 ATF，其实现上有两种 Profile，对 arm-a 系列的 TF-A，对 arm-m 系列的 TF-M，由于 a 系列使用较多的原因经常不区分 ATF 和 TF-A。</p><p>其作用是细化了特权级，帮助进行安全侧与非安全侧的切换，如下图所示，EL3 即为 ATF 的一部分。</p><p><img src="ELn.png" alt="ELn.png"></p><p>在实现上，EL0 和 EL1 是 ATF 必须实现的，EL2 和 EL3 可选。EL0-EL2 每一个层次又可以分为安全和非安全两部分，EL3 只有安全模式一种。</p><p>ATF 的作用是建立一套从启动到执行的信任链，借此提高 ARM 架构的安全性。</p><h1 id="ATF-功能"><a href="#ATF-功能" class="headerlink" title="ATF 功能"></a>ATF 功能</h1><p>过去的 ATF 只是为了电源管理，以及 Trust_zone 的切换，现在随着技术的不断发展，功能愈发庞大，现如今 ATF 的重要功能有：</p><ol><li>安全世界的初始化（BL32）</li><li>CPU rest</li><li>系统设备的驱动，例如 GIC</li><li>SMC 处理。</li><li>PSCI 库的支持。</li><li>Secure monitor 代码。</li><li>Secure Boot 实现</li></ol><h1 id="ATF-启动流程"><a href="#ATF-启动流程" class="headerlink" title="ATF 启动流程"></a>ATF 启动流程</h1><p><img src="ATF启动流程.png" alt="ATF启动流程.png"></p><p>其整体流程如上，接下来逐个说明。</p><h2 id="BL1"><a href="#BL1" class="headerlink" title="BL1"></a>BL1</h2><p>BL1,又名 Trusted Boot ROM,是放在 ROM 中的一段程序，是信任链建立的信任根，其目的是建立 Trusted SRAM（为运行 C 程序作堆栈准备），异常向量表，初始化 Console。找到并验证 BL2（验 CSF 头），然后汇编跳转到 BL2。</p><h2 id="BL2"><a href="#BL2" class="headerlink" title="BL2"></a>BL2</h2><p>BL2，又名 Trusted Boot FIrmware，其运行在 Flash 中，可信建立在 BL1 对其的验证上。其完成很多硬件的初始化。</p><p>其负责加载所有 BL3n 的 Images，例如 BL31,BL32,BL33。</p><p>最后会验证 BL31，然后跳转到 BL31。</p><p>但如何跳转是不同于 BL1 的，这里区分了 BL2 是否在 EL3 运行，如果在 EL3 运行，则由 BL2 跳转 BL31，如果不是，则 BL2 将会发起 SMC 中断，其由 BL1 异常向量表接收后进行汇编跳转。</p><p>也由此，我们可以明确 GIC 初始化大概率在 BL2 完成。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#if !BL2_RUNS_AT_EL3</span><br><span class="line">...</span><br><span class="line">smc(BL1_SMC_RUN_IMAGE, (unsigned long)next_bl_ep_info, 0, 0, 0, 0, 0, 0);</span><br><span class="line">...</span><br><span class="line">#else</span><br><span class="line">bl2_run_next_image(next_bl_ep_info);</span><br></pre></td></tr></table></figure><h2 id="BL31"><a href="#BL31" class="headerlink" title="BL31"></a>BL31</h2><p>BL31，又名 EL3 Runtime Firmware，其区别于 BL1 和 BL2 的一次性运行，其运行后将持续服务在 EL3，办法自通过 SMC 为 Non-Secure 提供服务。</p><p>其会初始化所有服务，如果初始化的服务中有 BL32 相关，则会验证并跳转到 BL32 初始化 TEE OS。最后在由 TEE OS 恢复 CPU 到 BL31，让其验证并进行 BL33 的初始化，由于 BL32 是可选的，所以如果没有实现 BL32，BL31 会转而立刻验证并进行 BL33 的初始化。</p><h2 id="BL32"><a href="#BL32" class="headerlink" title="BL32"></a>BL32</h2><p>BL32，其实是 Open Protable Trusted Execution Enveironment OS + APP,该 OS 运行在 SEL-1,其上的安全程序运行在 SEL-0。TEE OS 运行完毕后，会通过 SMC 中断，返回到 BL31。</p><h2 id="BL33"><a href="#BL33" class="headerlink" title="BL33"></a>BL33</h2><p>BL33，又名 Non-Trusted Firmware，其实就是 Uboot 或者 UEFI firmware。之后的信任由这些 Bootloader 完成。例如 UEFI SECURE BOOT。</p><p>到了 BL33，就和正常的启动差不多了，通过 Uboot 或者 UEFI 加载操作系统镜像进来启动。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>下图给出了 ATF 更多的细节：</p><p><img src="ATF功能细节.png" alt="ATF功能细节.png"></p><p>正因为这样的 Firmware 的引入，我们需要在编译 ATF 前就要指定好系统硬件，例如 GIC 的版本等等，否则启动将会遇到问题。</p><h1 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h1><p><a href="https://github.com/bao-project/bao-demos/tree/master/platforms/qemu-aarch64-virt">Bao-demo</a> 为上述提供了一种 QEMU 的验证方法，其可以编译出一个 ATF + Uboot 的 Flash.bin 文件在 QEMU 中执行。</p><p>下图是笔者尝试使用 GICV2 架构后的结果：</p><p><img src="验证.png" alt="验证.png"></p><p>QEMU 启动命令如下：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-aarch64 -machine virt,secure=on,gic-version=2,virtualization=on -cpu cortex-a53 -smp 4 -m 2G -nographic -bios flash.bin</span><br></pre></td></tr></table></figure><p>根据信息可以看出，启动流程和上文所述相同，BL1 启动 BL2，BL2 发送 SMC 让 BL1 启动 BL31，由于 BL32 没有实现，所以BL31 启动了 BL33，即 Uboot。</p><h1 id="UltraScale-的启动"><a href="#UltraScale-的启动" class="headerlink" title="UltraScale+ 的启动"></a>UltraScale+ 的启动</h1><p><img src="Ultrascale+.png" alt="Ultrascale+.png"></p><p>和一般嵌入式开发板不同，启动顺序是</p><p>BOOTROM—&gt;FSBL—&gt;ATF—&gt;optee—&gt;uboot-&gt;linux, FSBL 已经将所有镜像加载到内存。</p><p>因此，无需进行 BL1,BL2 加载镜像的过程，直接从 BL31 开始启动。</p><p>这也就是为什么，在制作 UltraScale+ 板子的启动镜像时，没有 BL1 和 BL2 的原因。</p><p><img src="OnlyBL31.png" alt="OnlyBL31.png"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Linux </tag>
+            
+            <tag> OS学习 </tag>
+            
+            <tag> 记忆留存 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ATF Uboot Linux 交叉编译命令留档</title>
+      <link href="/posts/39082/"/>
+      <url>/posts/39082/</url>
+      
+        <content type="html"><![CDATA[<h1 id="交叉工具链配置"><a href="#交叉工具链配置" class="headerlink" title="交叉工具链配置"></a>交叉工具链配置</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 下载需要的交叉编译链</span><br><span class="line"># 解压到目录</span><br><span class="line"># 加入环境变量 /etc/profile</span><br><span class="line">eg: export PATH=$PATH:/home/hangqi-ren/tools/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin:/home/hangqi-ren/qemu/qemu-7.2.12/build</span><br></pre></td></tr></table></figure><h1 id="Uboot-编译"><a href="#Uboot-编译" class="headerlink" title="Uboot 编译"></a>Uboot 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 拉取 2022.10 版本的 Uboot 且只拉取最新的 Commit.</span><br><span class="line">git clone https://github.com/u-boot/u-boot.git --depth 1\</span><br><span class="line">   --branch v2022.10</span><br><span class="line"># 生成 .config 文件</span><br><span class="line">make qemu_arm64_defconfig</span><br><span class="line"># 交叉编译</span><br><span class="line">make -j$(nproc) CROSS_COMPILE=aarch64-none-linux-gnu-</span><br></pre></td></tr></table></figure><h1 id="Linux-编译"><a href="#Linux-编译" class="headerlink" title="Linux 编译"></a>Linux 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 官网下载 Linux 任意版本源码</span><br><span class="line">https://cdn.kernel.org</span><br><span class="line"># 配置 .config 自行配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig</span><br><span class="line"># 配置 .config 采用现有配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- /(defconfig)</span><br><span class="line"># 编译</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j6</span><br></pre></td></tr></table></figure><h1 id="ATF-编译"><a href="#ATF-编译" class="headerlink" title="ATF 编译"></a>ATF 编译</h1><p>由于 BL33 本质是 Uboot / Uefi 等 bootloader，所以需要提供编好的 bootloader 作为输入。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 编译</span><br><span class="line">make PLAT=qemu bl1 fip BL33=u-boot.bin   QEMU_USE_GIC_DRIVER=QEMU_GICV2</span><br><span class="line"># 打包</span><br><span class="line">dd if=bl1.bin   of=flash.bin</span><br><span class="line">dd if=fip.bin   of=flash.bin seek=64 bs=4096 conv=notrunc</span><br></pre></td></tr></table></figure></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Unix-Linux-系统学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ARM 体系结构 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ARM-Gicv2 第四章学习</title>
+      <link href="/posts/57122/"/>
+      <url>/posts/57122/</url>
+      
+        <content type="html"><![CDATA[<p>第四章标题是编程模型</p><p>该章主要介绍了寄存器位置、每个寄存器的详细用法。建议当工具章进行查阅使用，所以未进行深入学习，这里放一个 GICV2 文档链接。</p><p><a href="https://bhpan.buaa.edu.cn/link/AA1ADE7AD026F640199D8ECD8F5E9551B1">Gicv2-Spec</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ARM 体系结构 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ARM-Gicv2 第三章学习</title>
+      <link href="/posts/51163/"/>
+      <url>/posts/51163/</url>
+      
+        <content type="html"><![CDATA[<h1 id="多核处理不同中断"><a href="#多核处理不同中断" class="headerlink" title="多核处理不同中断"></a>多核处理不同中断</h1><ul><li>SGI：N-N 模型。</li><li>外设中断：1-N 模型。<h1 id="识别支持的中断"><a href="#识别支持的中断" class="headerlink" title="识别支持的中断"></a>识别支持的中断</h1><h2 id="GICD-ISENABLERn"><a href="#GICD-ISENABLERn" class="headerlink" title="GICD_ISENABLERn"></a>GICD_ISENABLERn</h2>访问 GICD_ISENABLERn，来了解 GIC 目前支持那些中断，GICD_ISENABLER0[15:0] 对应 SGI 0-15，GICD_ISENABLER0[31:16] 对应 PPI 16-31。以此类推 GICD_ISENABLE1[31:0] 对应 SPI 32 - 63。</li></ul><p>对于一个中断，如果不被支持，则对应的寄存器位读为0且写无效；如果支持且永久启用，对应的寄存器读为1且写无效，其余的读写规则：</p><p><img src="GICD_ISENABLERn.png" alt="GICD_ISENABLERn.png"></p><h2 id="操作方法"><a href="#操作方法" class="headerlink" title="操作方法"></a>操作方法</h2><ol><li>访问 GICD_TYPER.ITLinesNumber 揭示有多少数量的 GICD_ISENABLER。</li><li>写 GICD_CTLR 来禁用分发器分发中断</li><li>对于每个 GICD_ISENABLER 的位对应的中断，利用不支持则写无效原则，写 0xffffffff 给寄存器，再次读寄存器，读出 1 则可知道支持的中断号。</li></ol><h1 id="识别永久启用的中断"><a href="#识别永久启用的中断" class="headerlink" title="识别永久启用的中断"></a>识别永久启用的中断</h1><h2 id="GICD-ICENABLERn"><a href="#GICD-ICENABLERn" class="headerlink" title="GICD_ICENABLERn"></a>GICD_ICENABLERn</h2><p>访问 GICD_ICENABLERn，来了解 GIC 目前关闭哪些中断，其是 GICD_ISENABLER 的反寄存器。</p><p>写规则如下：</p><p><img src="GICD_ICENABLER.png" alt="GICD_ICENABLER.png"></p><h2 id="GICD-IGROUPRn"><a href="#GICD-IGROUPRn" class="headerlink" title="GICD_IGROUPRn"></a>GICD_IGROUPRn</h2><p>访问 GICD_IGROUPRn，来了解 GIC 中断分组情况，结构和前面类似，每一位确定一个中断号的分组。</p><blockquote><p>控制某一分组是否进行路由是在 GICD_CTLR.EnableGrp0，GICD_CTLR.EnableGrp1 位进行的。</p></blockquote><h2 id="操作方法-1"><a href="#操作方法-1" class="headerlink" title="操作方法"></a>操作方法</h2><ol><li>访问 GICD_TYPER.ITLinesNumber 揭示有多少数量的 GICD_ICENABLER（和GICD_ISENABLER数量一致）。</li><li>对于每个 GICD_ICENABLER 的位对应的中断，写 0xffffffff 给寄存器，再次读寄存器，读出 1 则可知道永久启用的中断。</li><li>给 GICD_ISENABLER 写 1 来恢复必要的中断。</li></ol><blockquote><p>GICD_ISENABLER 写 0 无效，即不能通过 ISENABLER 禁用某一中断号。<br>GICD_ICENABLER 写 0 无效，即不能通过 ICENABLER 启用某一中断号。</p></blockquote><h1 id="中断处理流程"><a href="#中断处理流程" class="headerlink" title="中断处理流程"></a>中断处理流程</h1><ol><li>一个中断发起后，GIC 确认该中断是否启用，不启用的中断将被无效。</li><li>对于每个启用的且正在等待被处理的中断，分发器决定目标CPU。</li><li>对于每个CPU，分发器确定最高优先级的等待中断，然后将此中断路由给目标CPU接口。</li><li>如果一个分发器将中断分配到CPU接口，该CPU接口将确认该中断优先级是否足够有效以至于向CPU提出中断请求。</li><li>当 CPU 处理此中断请求，其访问 GICC_IAR 来确认此中断，这次访问将返回中断号，而且如果是 SGI 中断，也会返回源 CPUID。</li><li>当 GIC 识别到 5 中的访问时，GIC 会更改中断的状态以如下规则：<ul><li>如果中断的等待状态不可变或者中断再次产生，更改为等待并活跃状态。</li><li>否则，更改为活跃状态。</li></ul></li></ol><blockquote><p>一个等待状态不可变的例子是对于电平触发的中断，CPU 的确认行为并不会使电平回归低位，只有 CPU 处理程序处理中断后才会回归低位。</p></blockquote><ol><li>当 CPU 处理完中断后，其必须向 GIC 表明中断处理完成，通过：<ul><li>总是向 EOIR 寄存器写</li><li>可能会向 GICC_DIR 写</li></ul></li></ol><blockquote><p>对于 CPU 接口来说，GIC 要求向 EOIR 写的顺序是向 GICC_IAR 读的反顺序，确保每次的 EOIR 对应最近的中断确认。<br>其次，CPU接口永远不会对处于等待并活跃的中断向 CPU 发出中断请求。</p></blockquote><blockquote><p>对于 PPI 和 SGI 中断，每个中断号的状态是 banking 的，这意味着如果一个中断在某一CPU接口是活跃或者等待并活跃的，只有该CPU接口不会再次向CPU提出相同的中断请求。<br>对于 SPI 中断，每个中断号的状态是统一的，这意味着如果一个中断号是活跃或者等待并活跃的，那么所有 CPU 接口都不会提出相同的中断请求。</p></blockquote><h1 id="优先级降低和中断关闭"><a href="#优先级降低和中断关闭" class="headerlink" title="优先级降低和中断关闭"></a>优先级降低和中断关闭</h1><h2 id="优先级降低"><a href="#优先级降低" class="headerlink" title="优先级降低"></a>优先级降低</h2><p>优先级降低发生在一个对 EOIR 寄存器的有效写上，此时优先级从此次写 EOIR 对应的中断优先级降低到还没有写 EOIR 寄存器的最高优先级活跃中断，如果没有这样的中断，降低到 Idle 优先级。</p><h2 id="中断关闭"><a href="#中断关闭" class="headerlink" title="中断关闭"></a>中断关闭</h2><p>中断关闭是中断状态的改变：</p><ul><li>从等待并活跃转换到等待。</li><li>从活跃转换到空闲。</li></ul><p>如前面讲述的那样，如果中断优先级降低和中断关闭这两个阶段因为 GICC_CTLR.EOImode 设为 1 而分离，那么中断处理程序必须：</p><ol><li>进行一个有效的 EOIR 写，产生中断优先级降低在 CPU 接口上</li><li>进行 GICC_DIR 写，来正式关闭中断。</li></ol><p><img src="安全扩展别名寄存器.png" alt="安全扩展别名寄存器.png"></p><h1 id="GIC-中断控制"><a href="#GIC-中断控制" class="headerlink" title="GIC 中断控制"></a>GIC 中断控制</h1><h2 id="设置并清理中断的等待状态"><a href="#设置并清理中断的等待状态" class="headerlink" title="设置并清理中断的等待状态"></a>设置并清理中断的等待状态</h2><ol><li>对于外设中断，处理器可以：<ul><li>设置等待状态通过写 GICD_ISPENDRn 的某一位。</li><li>清理等待状态通过写 GICD_ICPENDRn 的某一位。</li></ul></li><li>对于电平敏感的中断：<ul><li>通过写 GICD_ICPENDRn 来清除等待状态无效。</li><li>如果通过写 GICD_ISPENDRn 来设置等待状态，则电平变化不会影响等待状态。</li></ul></li><li>对于 SGI 中断：<ul><li>写 GICD_ISPENDRn 和 GICD_ICPENDRn 是无效的。</li><li>SGI 等待状态通过写 GICD_SGIR 设置。在 GICV2 中，也可以通过写 GICD_SPENDSGIRn 和 GICD_CPENDSGIRn 来生效。<h2 id="产生一个-SGI"><a href="#产生一个-SGI" class="headerlink" title="产生一个 SGI"></a>产生一个 SGI</h2>一个处理器可以通过写 GICD_SGIR 来产生 SGI 中断<br><img src="GICD_SGIR.png" alt="GICD_SGIR.png"><br>SGI通过中断号、源CPU和目标CPU三者区分，等待状态独立。</li></ul></li></ol><p>在一个CPU接口上同一中断号只能有一个活跃。</p><h2 id="中断处理状态机"><a href="#中断处理状态机" class="headerlink" title="中断处理状态机"></a>中断处理状态机</h2><p>GIC 为每个中断维护一个状态机。</p><p><img src="statemachine.png" alt="statemachine.png"></p><ol><li>A1,A2:增加等待状态</li></ol><ul><li>对于SGI，发生如下状况之一：<ol><li>软件写 GICD_SGIR 来指定某一处理器作为目标</li><li>目标寄存器写 GICD_SPENDSGIRn 来指定源寄存器和中断号。</li></ol></li><li>对于SPI和PPI，发生如下状况之一：<ol><li>一个外设产生一个中断信号。</li><li>软件写了 GICD_ISPENDRn。</li></ol></li></ul><ol><li>B1,B2:删除等待状态</li></ol><ul><li>对于SGI，仅仅在目标寄存器写 GICD_CPENDSGIRn 时发生。</li><li>对于SPI和PPI，发生如下状况之一：<ol><li>电平触发的中断信号置位为无效。</li><li>边沿触发的中断信号或者通过写 GICD_ISPENDRn 产生的等待状态被软件写 GICD_ICPENDRn 清楚。</li></ol></li></ul><ol><li>C:等待到活跃状态</li></ol><ul><li>CPU 读取 GICC_IAR</li></ul><ol><li>D:等待到等待并活跃状态</li></ol><ul><li>对于SGI，发生如下情况之一：<ol><li>读 GICC_IAR 和设置 SGI 中断同时发生。</li><li>当同中断号、同源CPU、同目标CPU的两个中断有一个转变为活跃时，另一个转变为等待并活跃。</li></ol></li><li>对于SPI和PPI，按顺序发生如下情况：<ol><li>中断是启用的。</li><li>CPU 读 GICC_IAR，向该中断添加活跃状态。</li><li>如果是电平触发的中断，则中断一般情况就会变成等待并活跃状态。</li><li>如果是边沿触发的中断，则取决于是否再次触发中断。</li></ol></li></ul><ol><li>E1,E2:移除活跃状态。<br>发生在CPU通过写GICC_EOIR或者GICC_DIR清除中断时。</li></ol><h1 id="中断优先级"><a href="#中断优先级" class="headerlink" title="中断优先级"></a>中断优先级</h1><h2 id="数量"><a href="#数量" class="headerlink" title="数量"></a>数量</h2><p>GICv2 最多支持 256 种优先级，但具体支持多少是实现定义的，如果少于256则低位是读恒为0且写无效的。<br><img src="中断优先级数量.png" alt="中断优先级数量.png"></p><p>想知道具体的中断优先级数量可以通过向 GICD_IPRIORITYR 寄存器写 0xff 后读取来确定（根据写无效），该寄存器也配置了每个中断的优先级（8位对应一个）</p><p><img src="注意事项.png" alt="注意事项.png"></p><h2 id="抢占"><a href="#抢占" class="headerlink" title="抢占"></a>抢占</h2><p>一个处于等待的中断可以被发起需要满足以下条件：</p><ol><li>其优先级大于CPU接口的优先级掩码。</li><li>其所在组的组优先级大于CPU接口的运行优先级。</li></ol><h2 id="优先级掩码"><a href="#优先级掩码" class="headerlink" title="优先级掩码"></a>优先级掩码</h2><p>设置 GICC_PMR 可以定义目标处理器的优先级门槛，只有大于此优先级的中断才可能被发起中断请求。</p><p><img src="GICC_PMR.png" alt="GICC_PMR.png"></p><h2 id="优先级分组"><a href="#优先级分组" class="headerlink" title="优先级分组"></a>优先级分组</h2><p>优先级分组使用 GICC_BPR 来将一个优先级值分为两个区域——组优先级和子优先级，如下图所示，向该寄存器写入的值即为 <code>Binary point value</code>。</p><p><img src="组优先级.png" alt="组优先级.png"></p><p>当决定是否需要抢占时，同一组内的中断视为同一优先级。</p><h1 id="中断分组对中断处理的影响"><a href="#中断分组对中断处理的影响" class="headerlink" title="中断分组对中断处理的影响"></a>中断分组对中断处理的影响</h1><h2 id="GIC-中断分组支持"><a href="#GIC-中断分组支持" class="headerlink" title="GIC 中断分组支持"></a>GIC 中断分组支持</h2><p>GIC 为组 0 和组 1 提供了别名寄存器如下：<br><img src="GICGROUP.png" alt="GICGROUP.png"></p><h2 id="特殊中断号"><a href="#特殊中断号" class="headerlink" title="特殊中断号"></a>特殊中断号</h2><p>如果 GIC 支持中断分组。<br>1020-1021：保留。<br>1022: 发生在以下条件满足时：</p><ol><li>读 GICC_IAR 进行中断确认</li><li>此时最高优先级的等待中断在组 1</li><li>GICC_CTLR.AckCtl 设置为 0</li><li>该中断足够有效可以发起中断请求<br>这向程序表明此时有组1中断应该去处理，且应该读 GICC_AIAR，如果是对于实现了安全扩展的GIC，这表明应该以非安全的形式读 GICC_IAR。<h2 id="中断分组对中断处理的影响-1"><a href="#中断分组对中断处理的影响-1" class="headerlink" title="中断分组对中断处理的影响"></a>中断分组对中断处理的影响</h2>ARM强烈推荐对于支持中断分组的GIC，应该设置GICC_CTLR.AckCtl为0，在这种情况下：</li><li>组0中断应该通过读 GICC_IAR 来确认，或者在安全扩展的情况下通过安全读 GICC_IAR 实现。</li><li>组1中断应该通过读 GICC_AIAR 来确认，或者在安全扩展的情况下通过非安全读 GICC_IAR 实现。<br>建议组0的中断优先级都比组1高。<h2 id="中断确认在安全扩展"><a href="#中断确认在安全扩展" class="headerlink" title="中断确认在安全扩展"></a>中断确认在安全扩展</h2>安全扩展启用的情况下，组0中断是安全中断，组1中断是非安全中断，同样是在GICC_CTLR.AckCtl为0情况下：</li></ol><p>确认非安全中断，处理器可以非安全读GICC_IAR 或者安全读 GICC_AIAR 寄存器。</p><p>确认安全中断，处理器可以安全读 GICC_IAR 寄存器。</p><p>此时安全读到 1022 代表当前最高优先级等待中断为非安全中断，非安全读到 1023 代表当前最高级中断是安全中断。</p><h1 id="启动或者初始化配置"><a href="#启动或者初始化配置" class="headerlink" title="启动或者初始化配置"></a>启动或者初始化配置</h1><p>GIC 会将所有的中断归到组0，并且关闭 FIQ 异常请求。</p><h1 id="软件视角对于-GIC-安全扩展的优先级"><a href="#软件视角对于-GIC-安全扩展的优先级" class="headerlink" title="软件视角对于 GIC 安全扩展的优先级"></a>软件视角对于 GIC 安全扩展的优先级</h1><h2 id="安全与非安全优先级"><a href="#安全与非安全优先级" class="headerlink" title="安全与非安全优先级"></a>安全与非安全优先级</h2><p>很多系统在实现时需要 Group 0 的所有中断优先级高于 Group 1。因此 ARM 强烈推荐在分配优先级时遵循以下原则：</p><ol><li>组 0 中断优先级分配 GIC 所支持优先级的低半部分，即最高位为 0.</li><li>组 1 中断优先级分配 GIC 所支持优先级的高半部分。即最高位为 1.<h2 id="安全访问"><a href="#安全访问" class="headerlink" title="安全访问"></a>安全访问</h2>安全访问/写入 GICD_IPRIORITYR 寄存器，访问/写入结果和寄存器所存值相同。<br>![SecureView.jpg]<h2 id="非安全访问"><a href="#非安全访问" class="headerlink" title="非安全访问"></a>非安全访问</h2>非安全访问 GICD_IPRIORITYR 寄存器，访问结果是寄存器所存值左移 1 位的结果。非安全写 GICD_IPRIORITYR 寄存器，写的结果是所写值右移一位，以及 bit[7] = 1。<h3 id="寄存器值"><a href="#寄存器值" class="headerlink" title="寄存器值"></a>寄存器值</h3><img src="SecureRead.jpg" alt="SecureRead.jpg"><h3 id="访问结果"><a href="#访问结果" class="headerlink" title="访问结果"></a>访问结果</h3><img src="NonSecureRead.jpg" alt="NonSecureRead.jpg"><h2 id="软件视角"><a href="#软件视角" class="headerlink" title="软件视角"></a>软件视角</h2><img src="Software.jpg" alt="Software.jpg"><h2 id="组-1-中断的抢占控制"><a href="#组-1-中断的抢占控制" class="headerlink" title="组 1 中断的抢占控制"></a>组 1 中断的抢占控制</h2>如前文所述，一般情况下 GICC_BPR 决定组 0 抢占，GICC_ABPR 决定组 1 抢占，但这取决于 GICC_CTLR.CBPR 的控制，如果 CBPR = 1，则 GICC_BPR 同时决定组 0 和组 1 的抢占。<h3 id="安全扩展"><a href="#安全扩展" class="headerlink" title="安全扩展"></a>安全扩展</h3></li></ol><ul><li>CBPR 字段仅仅在 GICC_CTLR 的安全拷贝下实现。</li><li>GICC_BPR 安全拷贝决定组 0 中断，在 CBPR = 1 的情况下，也决定组 1 中断。</li><li>GICC_ABPR 是 GICC_CTLR 的非安全拷贝。</li><li>GICC_ABPR 是安全寄存器，仅能安全访问。<h2 id="中断分组对优先分组的影响"><a href="#中断分组对优先分组的影响" class="headerlink" title="中断分组对优先分组的影响"></a>中断分组对优先分组的影响</h2>当某一中断使用 GICC_ABPR 时，GICC_ABPR 决定的小数点相比 GICC_BPR 将会右移一位，这样保证了软件可以在不清楚自己处于安全/非安全的状态下得到相同的优先级分组。</li></ul><p><img src="GICC_ABPR.jpg" alt="GICC_ABPR.jpg"></p><blockquote><p>至于怎么理解的话，我是想假如以软件视图来看，假设一个中断的优先级是 abcdefg，如果是安全视角，存入 GICD_IPRIORITYR 的就是 abcdefg，然后假如 GICC_BPR 是 1，则分组是 abcde.fg，<br>如果是非安全视角，存入 GICD_IPRIORITYR 的就是 1abcdef，然后加入 GICC_ABPR 是 1， 则分组是 1abcde.f，这样两者之间就是一个数量差的映射关系，分组优先级就不变了。</p></blockquote><h1 id="在虚拟化环境中支持-IRQ-和-FIQ"><a href="#在虚拟化环境中支持-IRQ-和-FIQ" class="headerlink" title="在虚拟化环境中支持 IRQ 和 FIQ"></a>在虚拟化环境中支持 IRQ 和 FIQ</h1><h2 id="Hypervisor-的工作"><a href="#Hypervisor-的工作" class="headerlink" title="Hypervisor 的工作"></a>Hypervisor 的工作</h2><ol><li>实现一个虚拟的分发器，使用 GIC 的虚拟化扩展,这个虚拟化分发器可以虚拟化来自 GIC 的 IRQ 中断为虚拟 IRQ 和 虚拟 FIQ 中断，并且将其路由到合适的虚拟机。</li><li>路由物理 IRQ 到 Hypervisor，让其可以被虚拟分发器处理。<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2>Guest OS 分配中断到组 0 和 组 1，来将他们分配为 FIQ 或者 IRQ，其对 GIC 分发器的访问被 Hypervisor 捕获，变为对虚拟分发器的访问。</li></ol><p>虚拟CPU接口将这些中断以虚拟 FIQ 和 IRQ 的形式发送给 CPU。这个虚拟化过程在 Hypervisor 的控制下进行，对 OS 不可见。</p><h2 id="细节"><a href="#细节" class="headerlink" title="细节"></a>细节</h2><p><img src="VGIC.png" alt="VGIC.png"></p><p>当 GIC 发送一个 IRQ 给处理器时，中断应该被路由到 Hypervisor，Hypervisor 决定这个中断是发给自己还是 Guest OS的，如果是后者，则其应该确定：</p><ol><li>哪个 OS 该处理这个中断</li><li>OS 将这个中断配置为了 FIQ 还是 IRQ</li><li>中断优先级，基于 OS 配置的。</li></ol><p>确定后，Hypervisor 更新寄存器列表，将这个中断加入等待中断中。</p><p>如果收到一个 IRQ 时，当前运行的 OS不能处理这个中断,Hypervisor 应该：</p><ol><li>唤醒可以处理该中断的 OS。</li><li>将这个中断加入可以处理该中断的上下文保存中。</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ARM 体系结构 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ARM-Gicv2 第二章学习</title>
+      <link href="/posts/28608/"/>
+      <url>/posts/28608/</url>
+      
+        <content type="html"><![CDATA[<h1 id="GIC-组成"><a href="#GIC-组成" class="headerlink" title="GIC 组成"></a>GIC 组成</h1><h2 id="分发器-Distributor"><a href="#分发器-Distributor" class="headerlink" title="分发器 Distributor"></a>分发器 Distributor</h2><p>分发器的功能是定义优先级和将中断分发给GIC的CPU结构，其寄存器以 GICD_ 前缀识别。</p><h2 id="CPU-接口"><a href="#CPU-接口" class="headerlink" title="CPU 接口"></a>CPU 接口</h2><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>每个 CPU 接口层提供优先级掩码和抢占处理，其寄存器以 GICC_ 前缀识别。</p><h2 id="虚拟-CPU-接口"><a href="#虚拟-CPU-接口" class="headerlink" title="虚拟 CPU 接口"></a>虚拟 CPU 接口</h2><h3 id="虚拟接口控制器"><a href="#虚拟接口控制器" class="headerlink" title="虚拟接口控制器"></a>虚拟接口控制器</h3><p>最主要部分是一套寄存器，包含一个当前虚拟机正在处理和等待的中断表。一般情况下，这些寄存器被运行在此处理器上的Hypervisor管理，以 GICH_ 前缀识别。</p><h3 id="虚拟-CPU-接口-1"><a href="#虚拟-CPU-接口-1" class="headerlink" title="虚拟 CPU 接口"></a>虚拟 CPU 接口</h3><p>每个虚拟 CPU 接口对于虚拟中断提供物理信号对于连接到的处理器。ARM 处理器虚拟化扩展将这些中断信号发送到当前处理器正在执行的虚拟机上。虚拟CPU接口的寄存器可以被虚拟机访问，提供中断控制和状态信息。格式类似于 CPU 接口，以 GICV_ 前缀识别。<br><blockquote><p>在实现了虚拟化扩展的GIC中，Hypervisor有义务在切换虚拟机时切换 GICH 中存储的信息。</p></blockquote></p><h2 id="图示"><a href="#图示" class="headerlink" title="图示"></a>图示</h2><p><img src="GIC逻辑组成.png" alt="GIC逻辑组成.png"></p><h1 id="Distributor"><a href="#Distributor" class="headerlink" title="Distributor"></a>Distributor</h1><h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><p>分发器集中所有的中断源，确定每个中断的优先级，并为每个CPU接口转发具有最高优先级的中断到该接口，以进行优先级屏蔽和抢占处理。</p><h2 id="可配置参数"><a href="#可配置参数" class="headerlink" title="可配置参数"></a>可配置参数</h2><ul><li>全局启用中断分发。</li><li>开关每个中断。</li><li>设置每个中断的优先级。</li><li>设置每个中断的目标处理器。</li><li>设置每个外设中断的触发方式（边沿、电平）</li><li>设置每个中断的组。</li><li>路由 SGI 中断到目标处理器。<h2 id="中断号"><a href="#中断号" class="headerlink" title="中断号"></a>中断号</h2><h3 id="介绍-1"><a href="#介绍-1" class="headerlink" title="介绍"></a>介绍</h3>中断在 GIC 以 中断号进行标识，每个 CPU 接口可以看到 1020 个中断。Banking 机制增加了分发器支持的中断。<h3 id="分配规则"><a href="#分配规则" class="headerlink" title="分配规则"></a>分配规则</h3>GIC 分配 0 - 1019 以如下规则：</li><li>32-1019 被 SPI 使用</li><li>0 - 31 被私有中断使用（私有针对于CPU接口），这些中断在分发器中 banking，其中 0-15 被 SGI 使用，16-31 被 PPI 使用。<blockquote><p>每个连接到GIC的处理器通过写 GICD_SGIR 来发送 SGI 中断，在分发器中，一个 SGI 通过源CPUID，目标CPUID，中断号独立识别。在CPU接口中，接口在向CPU发送中断ID时会附加源CPUID来独立识别。</p></blockquote></li></ul><h1 id="CPU-接口-1"><a href="#CPU-接口-1" class="headerlink" title="CPU 接口"></a>CPU 接口</h1><h2 id="功能-1"><a href="#功能-1" class="headerlink" title="功能"></a>功能</h2><p>每个CPU接口提供处理器连接到GIC的接口，当CPU接口启用时，CPU接口为处理器取出最高优先级的等待中断并且确认该中断优先级是否足够有效使其向处理器发送中断请求。CPU可以在任意时刻读取GICC_HPPIR寄存器来看当前在CPU接口等待的最高优先级中断号。</p><h2 id="可配置参数-1"><a href="#可配置参数-1" class="headerlink" title="可配置参数"></a>可配置参数</h2><ul><li>启用向处理器发送中断请求信号</li><li>确认一个中断</li><li>表明一个中断的处理完成</li><li>设置处理器中断优先级掩码</li><li>定义处理器抢占策略</li><li>确定处理器待决的最高优先级中断。<h2 id="CPU-中断处理"><a href="#CPU-中断处理" class="headerlink" title="CPU 中断处理"></a>CPU 中断处理</h2>CPU 确认中断通过<strong>读取</strong>IAR寄存器来进行，读取的结果有两种：</li></ul><ol><li>真实中断号</li><li>虚假中断号</li></ol><p>当 CPU 确认中断后，分发器将该中断的状态设置为活跃、活跃和等待。此时 CPU 接口可以发起其他中断给处理器，来进行抢占。</p><p>当 CPU 完成中断处理后，处理器写处理器接口寄存器来表明完成，完成分为两个过程：</p><ol><li>优先级下降，意味着刚才处理中断的优先级无法再影响别的中断的发出了。</li><li>中断关闭，意味着分发器移除了中断的活跃状态。</li></ol><p>在 GICV2 中，两个过程是否同时发生取决于 GICC_CTLR 寄存器的控制。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ARM 体系结构 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ARM-Gicv2 第一章学习</title>
+      <link href="/posts/59403/"/>
+      <url>/posts/59403/</url>
+      
+        <content type="html"><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><h2 id="GIC-功能"><a href="#GIC-功能" class="headerlink" title="GIC 功能"></a>GIC 功能</h2><ul><li>为管理中断资源、中断行为进行注册，并对中断进行路由。</li><li>支持 ARM 安全扩展、虚拟化扩展</li><li>启用、禁用来自硬件的中断</li><li>SGI（软件中断）</li><li>中断掩码和优先级设置</li><li>在电源管理环境中产生唤醒事件。<h2 id="GIC-分组"><a href="#GIC-分组" class="headerlink" title="GIC 分组"></a>GIC 分组</h2></li><li>将每个中断配置为组 0 或者组 1。</li><li>将组 0 的中断以 IRQ 或者 FIQ 的形式发到处理器。</li><li>将组 1 的中断以 IRQ 的形式发送到处理器。</li><li>以一个统一的表来处理组0组1中断的优先级。</li><li>对组0的某些中断可以锁定。<blockquote><p>在许多 ARM 架构的实现中，IRQ 和 FIQ 中断请求对应于 IRQ 和 FIQ 异步异常。</p></blockquote><h2 id="GIC-安全支持"><a href="#GIC-安全支持" class="headerlink" title="GIC 安全支持"></a>GIC 安全支持</h2>对于实现了安全扩展的处理器：</li><li>组 0 中断为安全中断、组 1 中断为非安全中断。</li><li>处理器对 GIC 寄存器的访问分为安全与非安全。<ul><li>非安全访问只能读写控制非安全中断的寄存器。</li><li>安全访问可以读写任意寄存器。</li></ul></li><li>安全系统软件单独将每个已实施的中断定义为安全和非安全。<h2 id="GIC-虚拟化支持"><a href="#GIC-虚拟化支持" class="headerlink" title="GIC 虚拟化支持"></a>GIC 虚拟化支持</h2>支持对于虚拟中断的处理，降低 Hypervisor 路由中断到虚拟机的开销。<h1 id="术语介绍"><a href="#术语介绍" class="headerlink" title="术语介绍"></a>术语介绍</h1><h2 id="中断状态"><a href="#中断状态" class="headerlink" title="中断状态"></a>中断状态</h2></li><li>Inactive: 中断是未触发或者不在等待被处理。</li><li>Pending： 中断已经被触发，等待目标处理器处理。</li><li>Active: 中断已经被目标处理器确认，正在处理中。</li><li>Active and pending：中断正在被目标处理器处理，与此同时有一个一样的中断等待被处理。<h2 id="中断类型"><a href="#中断类型" class="headerlink" title="中断类型"></a>中断类型</h2><h3 id="外设中断"><a href="#外设中断" class="headerlink" title="外设中断"></a>外设中断</h3></li><li>PPI：私有外设中断，需要指定处理器处理的中断。</li><li>SPI：共享外设中断，可以被指定的一组寄存器处理的中断。<blockquote><p>外设中断在电平上分为两种：</p><ol><li>边沿触发：上升沿触发，一直保持中断触发状态直到被处理。</li><li>电平触发：在高电平时触发，要么被处理、要么回到低电平则撤销中断触发。</li></ol></blockquote><h3 id="软件中断"><a href="#软件中断" class="headerlink" title="软件中断"></a>软件中断</h3></li><li>通过软件写 GICD_SGIR 寄存器触发。用来进行核间通信。</li><li>软中断的触发属性和边沿触发一致。</li><li>当 SGI 软件中断触发时，通过 GICC_IAR 或者 GICC_AIAR 识别请求中断的处理器 ID。<blockquote><p>对于实现了虚拟扩展的GIC：</p><ol><li>SGI 发生时，在 GIC 虚拟扩展中的管理寄存器将允许将请求中断的CPU报告给虚拟机。</li><li>通过写管理寄存器，Hypervisor可以产生一个在虚拟机表现为SGI的虚拟中断。</li></ol></blockquote><h3 id="虚拟中断"><a href="#虚拟中断" class="headerlink" title="虚拟中断"></a>虚拟中断</h3>发给某一个运行在处理器上的虚拟机的中断。<h3 id="维护中断"><a href="#维护中断" class="headerlink" title="维护中断"></a>维护中断</h3>一个电平触发的中断，来揭示关键事件，例如一组中断被启用了。<h2 id="中断模型"><a href="#中断模型" class="headerlink" title="中断模型"></a>中断模型</h2><h3 id="1-N-模型"><a href="#1-N-模型" class="headerlink" title="1-N 模型"></a>1-N 模型</h3>中断发给多个处理器，但只需要一个处理器处理。<h3 id="N-N-模型"><a href="#N-N-模型" class="headerlink" title="N-N 模型"></a>N-N 模型</h3>中断发给多个处理器，每个处理器都要处理这个中断。<h2 id="虚假中断"><a href="#虚假中断" class="headerlink" title="虚假中断"></a>虚假中断</h2>在 GIC 将中断分发给 CPU 后，此中断不再被需要是可能的。所以在 CPU 确认此中断时，GIC 将会返回一个特殊的中断ID表面此中断是一个虚假中断。<h3 id="Banking"><a href="#Banking" class="headerlink" title="Banking"></a>Banking</h3></li><li>中断 Banking：一组中断在GIC表现为同一个中断号，通过中断号和关联CPU进行区分。</li><li>寄存器 Banking: 同一地址存在多个复制体寄存器。</li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ARM 体系结构 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>ZCU102提升-PL 协同 PS</title>
       <link href="/posts/2/"/>
       <url>/posts/2/</url>
