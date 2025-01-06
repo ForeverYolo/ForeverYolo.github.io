@@ -29,24 +29,40 @@
     
     
     <entry>
-      <title></title>
-      <link href="/posts/0/"/>
-      <url>/posts/0/</url>
+      <title>ARM-Trusted-Firmware 学习</title>
+      <link href="/posts/56859/"/>
+      <url>/posts/56859/</url>
       
-        <content type="html"><![CDATA[<h1 id="交叉工具链配置"><a href="#交叉工具链配置" class="headerlink" title="交叉工具链配置"></a>交叉工具链配置</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 下载需要的交叉编译链</span><br><span class="line"># 解压到目录</span><br><span class="line"># 加入环境变量 /etc/profile</span><br><span class="line">eg: export PATH=$PATH:/home/hangqi-ren/tools/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin:/home/hangqi-ren/qemu/qemu-7.2.12/build</span><br></pre></td></tr></table></figure><h1 id="Uboot-编译"><a href="#Uboot-编译" class="headerlink" title="Uboot 编译"></a>Uboot 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 拉取 2022.10 版本的 Uboot 且只拉取最新的 Commit.</span><br><span class="line">git clone https://github.com/u-boot/u-boot.git --depth 1\</span><br><span class="line">   --branch v2022.10</span><br><span class="line"># 生成 .config 文件</span><br><span class="line">make qemu_arm64_defconfig</span><br><span class="line"># 交叉编译</span><br><span class="line">make -j$(nproc) CROSS_COMPILE=aarch64-none-linux-gnu-</span><br></pre></td></tr></table></figure><h1 id="Linux-编译"><a href="#Linux-编译" class="headerlink" title="Linux 编译"></a>Linux 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 官网下载 Linux 任意版本源码</span><br><span class="line">https://cdn.kernel.org</span><br><span class="line"># 使用默认配置</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig</span><br><span class="line"># 配置 .config 自行配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig</span><br><span class="line"># 配置 .config 采用现有配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- /(defconfig)</span><br><span class="line"># 全部编译</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)</span><br><span class="line"># 编译内核</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image -j$(nproc)</span><br><span class="line"># 编译模块</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules -j$(nproc)</span><br></pre></td></tr></table></figure><h1 id="ATF-编译"><a href="#ATF-编译" class="headerlink" title="ATF 编译"></a>ATF 编译</h1><p>由于 BL33 本质是 Uboot / Uefi 等 bootloader，所以需要提供编好的 bootloader 作为输入。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 编译</span><br><span class="line">make PLAT=qemu bl1 fip BL33=u-boot.bin   QEMU_USE_GIC_DRIVER=QEMU_GICV2</span><br><span class="line"># 打包</span><br><span class="line">dd if=bl1.bin   of=flash.bin</span><br><span class="line">dd if=fip.bin   of=flash.bin seek=64 bs=4096 conv=notrunc</span><br></pre></td></tr></table></figure></p>]]></content>
+        <content type="html"><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在 ARMv8 之后，Uboot 在启动前需要先进行 ATF 的初始化，为了充分了解启动过程，对 ATF 进行了一波学习，总结在此篇文章中。</p><h1 id="ATF-概念"><a href="#ATF-概念" class="headerlink" title="ATF 概念"></a>ATF 概念</h1><p>安全是操作系统领域这些年经常提到的话题，TF（Trusted Firmware）是 ARM 为了提升安全在 ARMv8 引入的安全解决方案，其包括了启动和运行过程中的特权级划分。由于 TF 是 ARM 引入，所以也叫 ATF，其实现上有两种 Profile，对 arm-a 系列的 TF-A，对 arm-m 系列的 TF-M，由于 a 系列使用较多的原因经常不区分 ATF 和 TF-A。</p><p>其作用是细化了特权级，帮助进行安全侧与非安全侧的切换，如下图所示，EL3 即为 ATF 的一部分。</p><p><img src="ELn.png" alt="ELn.png"></p><p>在实现上，EL0 和 EL1 是 ATF 必须实现的，EL2 和 EL3 可选。EL0-EL2 每一个层次又可以分为安全和非安全两部分，EL3 只有安全模式一种。</p><p>ATF 的作用是建立一套从启动到执行的信任链，借此提高 ARM 架构的安全性。</p><h1 id="ATF-功能"><a href="#ATF-功能" class="headerlink" title="ATF 功能"></a>ATF 功能</h1><p>过去的 ATF 只是为了电源管理，以及 Trust_zone 的切换，现在随着技术的不断发展，功能愈发庞大，现如今 ATF 的重要功能有：</p><ol><li>安全世界的初始化（BL32）</li><li>CPU rest</li><li>系统设备的驱动，例如 GIC</li><li>SMC 处理。</li><li>PSCI 库的支持。</li><li>Secure monitor 代码。</li><li>Secure Boot 实现</li></ol><h1 id="ATF-启动流程"><a href="#ATF-启动流程" class="headerlink" title="ATF 启动流程"></a>ATF 启动流程</h1><p><img src="ATF启动流程.png" alt="ATF启动流程.png"></p><p>其整体流程如上，接下来逐个说明。</p><h2 id="BL1"><a href="#BL1" class="headerlink" title="BL1"></a>BL1</h2><p>BL1,又名 Trusted Boot ROM,是放在 ROM 中的一段程序，是信任链建立的信任根，其目的是建立 Trusted SRAM（为运行 C 程序作堆栈准备），异常向量表，初始化 Console。找到并验证 BL2（验 CSF 头），然后汇编跳转到 BL2。</p><h2 id="BL2"><a href="#BL2" class="headerlink" title="BL2"></a>BL2</h2><p>BL2，又名 Trusted Boot FIrmware，其运行在 Flash 中，可信建立在 BL1 对其的验证上。其完成很多硬件的初始化。</p><p>其负责加载所有 BL3n 的 Images，例如 BL31,BL32,BL33。</p><p>最后会验证 BL31，然后跳转到 BL31。</p><p>但如何跳转是不同于 BL1 的，这里区分了 BL2 是否在 EL3 运行，如果在 EL3 运行，则由 BL2 跳转 BL31，如果不是，则 BL2 将会发起 SMC 中断，其由 BL1 异常向量表接收后进行汇编跳转。</p><p>也由此，我们可以明确 GIC 初始化大概率在 BL2 完成。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#if !BL2_RUNS_AT_EL3</span><br><span class="line">...</span><br><span class="line">smc(BL1_SMC_RUN_IMAGE, (unsigned long)next_bl_ep_info, 0, 0, 0, 0, 0, 0);</span><br><span class="line">...</span><br><span class="line">#else</span><br><span class="line">bl2_run_next_image(next_bl_ep_info);</span><br></pre></td></tr></table></figure><h2 id="BL31"><a href="#BL31" class="headerlink" title="BL31"></a>BL31</h2><p>BL31，又名 EL3 Runtime Firmware，其区别于 BL1 和 BL2 的一次性运行，其运行后将持续服务在 EL3，办法自通过 SMC 为 Non-Secure 提供服务。</p><p>其会初始化所有服务，如果初始化的服务中有 BL32 相关，则会验证并跳转到 BL32 初始化 TEE OS。最后在由 TEE OS 恢复 CPU 到 BL31，让其验证并进行 BL33 的初始化，由于 BL32 是可选的，所以如果没有实现 BL32，BL31 会转而立刻验证并进行 BL33 的初始化。</p><h2 id="BL32"><a href="#BL32" class="headerlink" title="BL32"></a>BL32</h2><p>BL32，其实是 Open Protable Trusted Execution Enveironment OS + APP,该 OS 运行在 SEL-1,其上的安全程序运行在 SEL-0。TEE OS 运行完毕后，会通过 SMC 中断，返回到 BL31。</p><h2 id="BL33"><a href="#BL33" class="headerlink" title="BL33"></a>BL33</h2><p>BL33，又名 Non-Trusted Firmware，其实就是 Uboot 或者 UEFI firmware。之后的信任由这些 Bootloader 完成。例如 UEFI SECURE BOOT。</p><p>到了 BL33，就和正常的启动差不多了，通过 Uboot 或者 UEFI 加载操作系统镜像进来启动。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>下图给出了 ATF 更多的细节：</p><p><img src="ATF功能细节.png" alt="ATF功能细节.png"></p><p>正因为这样的 Firmware 的引入，我们需要在编译 ATF 前就要指定好系统硬件，例如 GIC 的版本等等，否则启动将会遇到问题。</p><h1 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h1><p><a href="https://github.com/bao-project/bao-demos/tree/master/platforms/qemu-aarch64-virt">Bao-demo</a> 为上述提供了一种 QEMU 的验证方法，其可以编译出一个 ATF + Uboot 的 Flash.bin 文件在 QEMU 中执行。</p><p>下图是笔者尝试使用 GICV2 架构后的结果：</p><p><img src="验证.png" alt="验证.png"></p><p>QEMU 启动命令如下：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-aarch64 -machine virt,secure=on,gic-version=2,virtualization=on -cpu cortex-a53 -smp 4 -m 2G -nographic -bios flash.bin</span><br></pre></td></tr></table></figure><p>根据信息可以看出，启动流程和上文所述相同，BL1 启动 BL2，BL2 发送 SMC 让 BL1 启动 BL31，由于 BL32 没有实现，所以BL31 启动了 BL33，即 Uboot。</p><h1 id="UltraScale-的启动"><a href="#UltraScale-的启动" class="headerlink" title="UltraScale+ 的启动"></a>UltraScale+ 的启动</h1><p><img src="Ultrascale+.png" alt="Ultrascale+.png"></p><p>和一般嵌入式开发板不同，启动顺序是</p><p>BOOTROM—&gt;FSBL—&gt;ATF—&gt;optee—&gt;uboot-&gt;linux, FSBL 已经将所有镜像加载到内存。</p><p>因此，无需进行 BL1,BL2 加载镜像的过程，直接从 BL31 开始启动。</p><p>这也就是为什么，在制作 UltraScale+ 板子的启动镜像时，没有 BL1 和 BL2 的原因。</p><p><img src="OnlyBL31.png" alt="OnlyBL31.png"></p>]]></content>
       
       
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Linux </tag>
+            
+            <tag> OS学习 </tag>
+            
+            <tag> 记忆留存 </tag>
+            
+        </tags>
       
     </entry>
     
     
     
     <entry>
-      <title>ARM-Trusted-Firmware 学习</title>
-      <link href="/posts/56859/"/>
-      <url>/posts/56859/</url>
+      <title>ATF Uboot Linux 交叉编译命令留档</title>
+      <link href="/posts/39082/"/>
+      <url>/posts/39082/</url>
       
-        <content type="html"><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在 ARMv8 之后，Uboot 在启动前需要先进行 ATF 的初始化，为了充分了解启动过程，对 ATF 进行了一波学习，总结在此篇文章中。</p><h1 id="ATF-概念"><a href="#ATF-概念" class="headerlink" title="ATF 概念"></a>ATF 概念</h1><p>安全是操作系统领域这些年经常提到的话题，TF（Trusted Firmware）是 ARM 为了提升安全在 ARMv8 引入的安全解决方案，其包括了启动和运行过程中的特权级划分。由于 TF 是 ARM 引入，所以也叫 ATF，其实现上有两种 Profile，对 arm-a 系列的 TF-A，对 arm-m 系列的 TF-M，由于 a 系列使用较多的原因经常不区分 ATF 和 TF-A。</p><p>其作用是细化了特权级，帮助进行安全侧与非安全侧的切换，如下图所示，EL3 即为 ATF 的一部分。</p><p><img src="ELn.png" alt="ELn.png"></p><p>在实现上，EL0 和 EL1 是 ATF 必须实现的，EL2 和 EL3 可选。EL0-EL2 每一个层次又可以分为安全和非安全两部分，EL3 只有安全模式一种。</p><p>ATF 的作用是建立一套从启动到执行的信任链，借此提高 ARM 架构的安全性。</p><h1 id="ATF-功能"><a href="#ATF-功能" class="headerlink" title="ATF 功能"></a>ATF 功能</h1><p>过去的 ATF 只是为了电源管理，以及 Trust_zone 的切换，现在随着技术的不断发展，功能愈发庞大，现如今 ATF 的重要功能有：</p><ol><li>安全世界的初始化（BL32）</li><li>CPU rest</li><li>系统设备的驱动，例如 GIC</li><li>SMC 处理。</li><li>PSCI 库的支持。</li><li>Secure monitor 代码。</li><li>Secure Boot 实现</li></ol><h1 id="ATF-启动流程"><a href="#ATF-启动流程" class="headerlink" title="ATF 启动流程"></a>ATF 启动流程</h1><p><img src="ATF启动流程.png" alt="ATF启动流程.png"></p><p>其整体流程如上，接下来逐个说明。</p><h2 id="BL1"><a href="#BL1" class="headerlink" title="BL1"></a>BL1</h2><p>BL1,又名 Trusted Boot ROM,是放在 ROM 中的一段程序，是信任链建立的信任根，其目的是建立 Trusted SRAM（为运行 C 程序作堆栈准备），异常向量表，初始化 Console。找到并验证 BL2（验 CSF 头），然后汇编跳转到 BL2。</p><h2 id="BL2"><a href="#BL2" class="headerlink" title="BL2"></a>BL2</h2><p>BL2，又名 Trusted Boot FIrmware，其运行在 Flash 中，可信建立在 BL1 对其的验证上。其完成很多硬件的初始化。</p><p>其负责加载所有 BL3n 的 Images，例如 BL31,BL32,BL33。</p><p>最后会验证 BL31，然后跳转到 BL31。</p><p>但如何跳转是不同于 BL1 的，这里区分了 BL2 是否在 EL3 运行，如果在 EL3 运行，则由 BL2 跳转 BL31，如果不是，则 BL2 将会发起 SMC 中断，其由 BL1 异常向量表接收后进行汇编跳转。</p><p>也由此，我们可以明确 GIC 初始化大概率在 BL2 完成。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#if !BL2_RUNS_AT_EL3</span><br><span class="line">...</span><br><span class="line">smc(BL1_SMC_RUN_IMAGE, (unsigned long)next_bl_ep_info, 0, 0, 0, 0, 0, 0);</span><br><span class="line">...</span><br><span class="line">#else</span><br><span class="line">bl2_run_next_image(next_bl_ep_info);</span><br></pre></td></tr></table></figure><h2 id="BL31"><a href="#BL31" class="headerlink" title="BL31"></a>BL31</h2><p>BL31，又名 EL3 Runtime Firmware，其区别于 BL1 和 BL2 的一次性运行，其运行后将持续服务在 EL3，办法自通过 SMC 为 Non-Secure 提供服务。</p><p>其会初始化所有服务，如果初始化的服务中有 BL32 相关，则会验证并跳转到 BL32 初始化 TEE OS。最后在由 TEE OS 恢复 CPU 到 BL31，让其验证并进行 BL33 的初始化，由于 BL32 是可选的，所以如果没有实现 BL32，BL31 会转而立刻验证并进行 BL33 的初始化。</p><h2 id="BL32"><a href="#BL32" class="headerlink" title="BL32"></a>BL32</h2><p>BL32，其实是 Open Protable Trusted Execution Enveironment OS + APP,该 OS 运行在 SEL-1,其上的安全程序运行在 SEL-0。TEE OS 运行完毕后，会通过 SMC 中断，返回到 BL31。</p><h2 id="BL33"><a href="#BL33" class="headerlink" title="BL33"></a>BL33</h2><p>BL33，又名 Non-Trusted Firmware，其实就是 Uboot 或者 UEFI firmware。之后的信任由这些 Bootloader 完成。例如 UEFI SECURE BOOT。</p><p>到了 BL33，就和正常的启动差不多了，通过 Uboot 或者 UEFI 加载操作系统镜像进来启动。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>下图给出了 ATF 更多的细节：</p><p><img src="ATF功能细节.png" alt="ATF功能细节.png"></p><p>正因为这样的 Firmware 的引入，我们需要在编译 ATF 前就要指定好系统硬件，例如 GIC 的版本等等，否则启动将会遇到问题。</p><h1 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h1><p><a href="https://github.com/bao-project/bao-demos/tree/master/platforms/qemu-aarch64-virt">Bao-demo</a> 为上述提供了一种 QEMU 的验证方法，其可以编译出一个 ATF + Uboot 的 Flash.bin 文件在 QEMU 中执行。</p><p>下图是笔者尝试使用 GICV2 架构后的结果：</p><p><img src="验证.png" alt="验证.png"></p><p>QEMU 启动命令如下：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-aarch64 -machine virt,secure=on,gic-version=2,virtualization=on -cpu cortex-a53 -smp 4 -m 2G -nographic -bios flash.bin</span><br></pre></td></tr></table></figure><p>根据信息可以看出，启动流程和上文所述相同，BL1 启动 BL2，BL2 发送 SMC 让 BL1 启动 BL31，由于 BL32 没有实现，所以BL31 启动了 BL33，即 Uboot。</p><h1 id="UltraScale-的启动"><a href="#UltraScale-的启动" class="headerlink" title="UltraScale+ 的启动"></a>UltraScale+ 的启动</h1><p><img src="Ultrascale+.png" alt="Ultrascale+.png"></p><p>和一般嵌入式开发板不同，启动顺序是</p><p>BOOTROM—&gt;FSBL—&gt;ATF—&gt;optee—&gt;uboot-&gt;linux, FSBL 已经将所有镜像加载到内存。</p><p>因此，无需进行 BL1,BL2 加载镜像的过程，直接从 BL31 开始启动。</p><p>这也就是为什么，在制作 UltraScale+ 板子的启动镜像时，没有 BL1 和 BL2 的原因。</p><p><img src="OnlyBL31.png" alt="OnlyBL31.png"></p>]]></content>
+        <content type="html"><![CDATA[<h1 id="交叉工具链配置"><a href="#交叉工具链配置" class="headerlink" title="交叉工具链配置"></a>交叉工具链配置</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 下载需要的交叉编译链</span><br><span class="line"># 解压到目录</span><br><span class="line"># 加入环境变量 /etc/profile</span><br><span class="line">eg: export PATH=$PATH:/home/hangqi-ren/tools/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin:/home/hangqi-ren/qemu/qemu-7.2.12/build</span><br></pre></td></tr></table></figure><h1 id="Uboot-编译"><a href="#Uboot-编译" class="headerlink" title="Uboot 编译"></a>Uboot 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 拉取 2022.10 版本的 Uboot 且只拉取最新的 Commit.</span><br><span class="line">git clone https://github.com/u-boot/u-boot.git --depth 1\</span><br><span class="line">   --branch v2022.10</span><br><span class="line"># 生成 .config 文件</span><br><span class="line">make qemu_arm64_defconfig</span><br><span class="line"># 交叉编译</span><br><span class="line">make -j$(nproc) CROSS_COMPILE=aarch64-none-linux-gnu-</span><br></pre></td></tr></table></figure><h1 id="Linux-编译"><a href="#Linux-编译" class="headerlink" title="Linux 编译"></a>Linux 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 官网下载 Linux 任意版本源码</span><br><span class="line">https://cdn.kernel.org</span><br><span class="line"># 使用默认配置</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig</span><br><span class="line"># 配置 .config 自行配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig</span><br><span class="line"># 配置 .config 采用现有配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- (config名称)</span><br><span class="line"># 全部编译</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)</span><br><span class="line"># 编译内核</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image -j$(nproc)</span><br><span class="line"># 编译模块</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules -j$(nproc)</span><br></pre></td></tr></table></figure><h1 id="ATF-编译"><a href="#ATF-编译" class="headerlink" title="ATF 编译"></a>ATF 编译</h1><p>由于 BL33 本质是 Uboot / Uefi 等 bootloader，所以需要提供编好的 bootloader 作为输入。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 编译</span><br><span class="line">make PLAT=qemu bl1 fip BL33=u-boot.bin   QEMU_USE_GIC_DRIVER=QEMU_GICV2</span><br><span class="line"># 打包</span><br><span class="line">dd if=bl1.bin   of=flash.bin</span><br><span class="line">dd if=fip.bin   of=flash.bin seek=64 bs=4096 conv=notrunc</span><br></pre></td></tr></table></figure></p>]]></content>
       
       
       <categories>
@@ -1555,44 +1571,11 @@
     
     
     <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title></title>
       <link href="/baidu_verify_codeva-rSxShdkzwD.html"/>
       <url>/baidu_verify_codeva-rSxShdkzwD.html</url>
       
         <content type="html"><![CDATA[3cb4bb475c7dde65b56ca90f7afdabed]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>书籍</title>
-      <link href="/books/index.html"/>
-      <url>/books/index.html</url>
-      
-        <content type="html"><![CDATA[<div class="fj-gallery"><p><img src="https://s1.ax1x.com/2023/01/28/pSanJat.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaurlD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauyOH.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanoZR.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanOzD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaupdI.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauQYV.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaulWT.png" alt=""></p>          </div>]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>archives</title>
-      <link href="/archives/index.html"/>
-      <url>/archives/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
       
     </entry>
     
@@ -1610,9 +1593,20 @@
     
     
     <entry>
-      <title>link</title>
-      <link href="/link/index.html"/>
-      <url>/link/index.html</url>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>archives</title>
+      <link href="/archives/index.html"/>
+      <url>/archives/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -1632,11 +1626,33 @@
     
     
     <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
+      <title>link</title>
+      <link href="/link/index.html"/>
+      <url>/link/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>书籍</title>
+      <link href="/books/index.html"/>
+      <url>/books/index.html</url>
+      
+        <content type="html"><![CDATA[<div class="fj-gallery"><p><img src="https://s1.ax1x.com/2023/01/28/pSanJat.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaurlD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauyOH.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanoZR.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanOzD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaupdI.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauQYV.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaulWT.png" alt=""></p>          </div>]]></content>
       
     </entry>
     
