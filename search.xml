@@ -29,6 +29,19 @@
     
     
     <entry>
+      <title></title>
+      <link href="/posts/0/"/>
+      <url>/posts/0/</url>
+      
+        <content type="html"><![CDATA[<h1 id="交叉工具链配置"><a href="#交叉工具链配置" class="headerlink" title="交叉工具链配置"></a>交叉工具链配置</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 下载需要的交叉编译链</span><br><span class="line"># 解压到目录</span><br><span class="line"># 加入环境变量 /etc/profile</span><br><span class="line">eg: export PATH=$PATH:/home/hangqi-ren/tools/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin:/home/hangqi-ren/qemu/qemu-7.2.12/build</span><br></pre></td></tr></table></figure><h1 id="Uboot-编译"><a href="#Uboot-编译" class="headerlink" title="Uboot 编译"></a>Uboot 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 拉取 2022.10 版本的 Uboot 且只拉取最新的 Commit.</span><br><span class="line">git clone https://github.com/u-boot/u-boot.git --depth 1\</span><br><span class="line">   --branch v2022.10</span><br><span class="line"># 生成 .config 文件</span><br><span class="line">make qemu_arm64_defconfig</span><br><span class="line"># 交叉编译</span><br><span class="line">make -j$(nproc) CROSS_COMPILE=aarch64-none-linux-gnu-</span><br></pre></td></tr></table></figure><h1 id="Linux-编译"><a href="#Linux-编译" class="headerlink" title="Linux 编译"></a>Linux 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 官网下载 Linux 任意版本源码</span><br><span class="line">https://cdn.kernel.org</span><br><span class="line"># 使用默认配置</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig</span><br><span class="line"># 配置 .config 自行配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig</span><br><span class="line"># 配置 .config 采用现有配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- /(defconfig)</span><br><span class="line"># 全部编译</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)</span><br><span class="line"># 编译内核</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image -j$(nproc)</span><br><span class="line"># 编译模块</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules -j$(nproc)</span><br></pre></td></tr></table></figure><h1 id="ATF-编译"><a href="#ATF-编译" class="headerlink" title="ATF 编译"></a>ATF 编译</h1><p>由于 BL33 本质是 Uboot / Uefi 等 bootloader，所以需要提供编好的 bootloader 作为输入。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 编译</span><br><span class="line">make PLAT=qemu bl1 fip BL33=u-boot.bin   QEMU_USE_GIC_DRIVER=QEMU_GICV2</span><br><span class="line"># 打包</span><br><span class="line">dd if=bl1.bin   of=flash.bin</span><br><span class="line">dd if=fip.bin   of=flash.bin seek=64 bs=4096 conv=notrunc</span><br></pre></td></tr></table></figure></p>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>ARM-Trusted-Firmware 学习</title>
       <link href="/posts/56859/"/>
       <url>/posts/56859/</url>
@@ -50,37 +63,6 @@
             <tag> OS学习 </tag>
             
             <tag> 记忆留存 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>ATF Uboot Linux 交叉编译命令留档</title>
-      <link href="/posts/39082/"/>
-      <url>/posts/39082/</url>
-      
-        <content type="html"><![CDATA[<h1 id="交叉工具链配置"><a href="#交叉工具链配置" class="headerlink" title="交叉工具链配置"></a>交叉工具链配置</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 下载需要的交叉编译链</span><br><span class="line"># 解压到目录</span><br><span class="line"># 加入环境变量 /etc/profile</span><br><span class="line">eg: export PATH=$PATH:/home/hangqi-ren/tools/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin:/home/hangqi-ren/qemu/qemu-7.2.12/build</span><br></pre></td></tr></table></figure><h1 id="Uboot-编译"><a href="#Uboot-编译" class="headerlink" title="Uboot 编译"></a>Uboot 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 拉取 2022.10 版本的 Uboot 且只拉取最新的 Commit.</span><br><span class="line">git clone https://github.com/u-boot/u-boot.git --depth 1\</span><br><span class="line">   --branch v2022.10</span><br><span class="line"># 生成 .config 文件</span><br><span class="line">make qemu_arm64_defconfig</span><br><span class="line"># 交叉编译</span><br><span class="line">make -j$(nproc) CROSS_COMPILE=aarch64-none-linux-gnu-</span><br></pre></td></tr></table></figure><h1 id="Linux-编译"><a href="#Linux-编译" class="headerlink" title="Linux 编译"></a>Linux 编译</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 官网下载 Linux 任意版本源码</span><br><span class="line">https://cdn.kernel.org</span><br><span class="line"># 配置 .config 自行配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig</span><br><span class="line"># 配置 .config 采用现有配置：</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- /(defconfig)</span><br><span class="line"># 编译</span><br><span class="line">make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j6</span><br></pre></td></tr></table></figure><h1 id="ATF-编译"><a href="#ATF-编译" class="headerlink" title="ATF 编译"></a>ATF 编译</h1><p>由于 BL33 本质是 Uboot / Uefi 等 bootloader，所以需要提供编好的 bootloader 作为输入。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 编译</span><br><span class="line">make PLAT=qemu bl1 fip BL33=u-boot.bin   QEMU_USE_GIC_DRIVER=QEMU_GICV2</span><br><span class="line"># 打包</span><br><span class="line">dd if=bl1.bin   of=flash.bin</span><br><span class="line">dd if=fip.bin   of=flash.bin seek=64 bs=4096 conv=notrunc</span><br></pre></td></tr></table></figure></p>]]></content>
-      
-      
-      <categories>
-          
-          <category> 嵌入式相关学习 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> ARM 体系结构 </tag>
-            
-            <tag> Linux </tag>
-            
-            <tag> ATF </tag>
-            
-            <tag> Uboot </tag>
             
         </tags>
       
