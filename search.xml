@@ -4,6 +4,56 @@
   
     
     <entry>
+      <title>基于ubuntu_base构建文件系统</title>
+      <link href="/posts/60156/"/>
+      <url>/posts/60156/</url>
+      
+        <content type="html"><![CDATA[<h1 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h1><p>经常搞 Liunx 的人都知道，文件系统是 Liunx 不可或缺的一部分，难免会遇到需要自己定制一个文件系统的情形，本篇文章就是讲述了基于 ubuntu_base 来定制一个文件系统的方法。</p><h1 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h1><ol><li>如果想要构建的文件系统和构建时所用的平台不一样，则需要创建一个模拟环境，创建也很简单，安装 <code>qemu-user-static</code> 即可。例如<code>apt install qemu-user-static</code>。</li><li>获取 ubuntu_base，直接从官网<a href="https://cdimage.ubuntu.com/ubuntu-base/releases/">下载</a>即可，如果访问异常就挂一个代理，至于版本选择，一般情况选新不选旧，但也要结合你的实际情况。</li></ol><p><img src="下载ubuntu_rootfs.png" alt="ubuntu"></p><h1 id="配置根文件系统"><a href="#配置根文件系统" class="headerlink" title="配置根文件系统"></a>配置根文件系统</h1><p>以 <code>ubuntu-base-24.04.1-base-arm64</code> 为例：</p><ol><li>解压根文件系统： <code>tar -xvf ubuntu-base-24.04.1-base-arm64 -C 目标文件夹</code></li><li>为根文件系统配置网络: <code>cp /etc/resolv.conf  ubuntu-base-24.04.1-base-arm64/etc/resolv.conf</code></li><li><p>更换 apt 的软件源： <code>sudo vim ubuntu-base-24.04.1-base-arm64/etc/apt/source.list</code></p><p> 更换内容需要根据 <strong>ubuntu 版本 + 架构</strong> 共同决定，上网搜 <code>ubuntu 版本 + 架构</code> 更换软件源进行覆盖即可。</p><p> 需要注意的是 ubuntu 24.04 不再通过上述文件控制软件源，而是 <code>/etc/apt/sources.list.d/ubuntu.sources</code>，参考换源<a href="https://blog.csdn.net/qq_37344125/article/details/138841559">见这里</a></p></li><li><p>编写 mount 脚本，这里直接提供一个通用脚本：</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">mnt</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;MOUNTING&quot;</span></span><br><span class="line">    sudo mount -t proc /proc <span class="variable">$&#123;2&#125;</span>proc</span><br><span class="line">    sudo mount -t sysfs /sys <span class="variable">$&#123;2&#125;</span>sys</span><br><span class="line">    sudo mount -o <span class="built_in">bind</span> /dev <span class="variable">$&#123;2&#125;</span>dev</span><br><span class="line">    <span class="comment">#sudo mount -t devpts -o gid=5,mode=620 devpts $&#123;2&#125;dev/pts</span></span><br><span class="line">    sudo mount -o <span class="built_in">bind</span> /dev/pts <span class="variable">$&#123;2&#125;</span>dev/pts</span><br><span class="line">    sudo <span class="built_in">chroot</span> <span class="variable">$&#123;2&#125;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">umnt</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;UNMOUNTING&quot;</span></span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>proc</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>sys</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>dev/pts</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>dev</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$1</span>&quot;</span> == <span class="string">&quot;-m&quot;</span> ] &amp;&amp; [ -n <span class="string">&quot;<span class="variable">$2</span>&quot;</span> ];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        mnt <span class="variable">$1</span> <span class="variable">$2</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="string">&quot;<span class="variable">$1</span>&quot;</span> == <span class="string">&quot;-u&quot;</span> ] &amp;&amp; [ -n <span class="string">&quot;<span class="variable">$2</span>&quot;</span> ];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        umnt <span class="variable">$1</span> <span class="variable">$2</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;Either 1&#x27;st, 2&#x27;nd or both parameters were missing&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;1&#x27;st parameter can be one of these: -m(mount) OR -u(umount)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;2&#x27;nd parameter is the full path of rootfs directory(with tralling &#x27;/&#x27;)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;For example: ch-mount -m /media/sdcard&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> 1st parameter : <span class="variable">$&#123;1&#125;</span></span><br><span class="line">        <span class="built_in">echo</span> 2nd parameter : $[2]</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure> <p> 此脚本目的是为了暂时将构建机所用的文件系统暂时切换到根文件系统，然后就可以像操作正常的文件系统一样为此文件系统安装软件包。</p><p> 用法如下：</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#增加脚本执行权限</span></span><br><span class="line">sudo <span class="built_in">chmod</span> +x mount.sh</span><br><span class="line"><span class="comment">#挂载根文件系统</span></span><br><span class="line">./mount -m ubuntu_rootfs/</span><br><span class="line"><span class="comment">#退出根文件系统</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line"><span class="comment">#卸载根文件系统</span></span><br><span class="line">./mount.sh -u ubuntu_rootfs/</span><br></pre></td></tr></table></figure> </li><li><p>挂载根文件系统，为其安装必要组件 + 按需自己安装</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#更新软件</span></span><br><span class="line">apt update</span><br><span class="line">apt upgrade</span><br><span class="line"><span class="comment">#安装必要工具</span></span><br><span class="line">apt install vim bash-completion net-tools iputils-ping ifupdown ethtool \</span><br><span class="line"> ssh rsync udev htop rsyslog nfs-common language-pack-en-base sudo psmisc </span><br></pre></td></tr></table></figure> </li><li><p>更改 root 密码，<code>passwd root</code> 按照提示输入两次密码即可。</p><p> 如果这里出现了 <code>passwd：Authentication token manipulation error</code> 这样的报错，可以参照<a href="https://blog.csdn.net/zly_ir/article/details/51264874">这里</a>解决。但是不一定能完美解决，如果实在改不了密码，可以使用下一步骤曲线救国：</p></li><li><p>设置自动登录 root 账户，在安装了 <code>udev</code> 后，可以打开 <code>vi /lib/systemd/system/serial-getty\@.service</code>，将 <code>ExecStart</code> 这一行改为 <code>ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM</code>。</p></li><li><p>退出根文件系统，卸载根文件系统。</p></li></ol><h1 id="打包根文件系统"><a href="#打包根文件系统" class="headerlink" title="打包根文件系统"></a>打包根文件系统</h1><ol><li>制作空镜像，在此处指定你最终想要做的根文件系统镜像大小。<code>dd if=/dev/zero of=ubuntu.ext4 bs=1M count=大小</code>。</li><li>将空镜像格式化为 ext4 格式，<code>mkfs.ext4 ubuntu.ext4</code></li><li><p>挂载此镜像，将根文件系统的内容全部复制到镜像中。</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> mnt</span><br><span class="line">sudo mount ubuntu.ext4 ubuntu-base-24.04.1-base-arm64/</span><br><span class="line">sudo <span class="built_in">cp</span> -rfp ubuntu-base-24.04.1-base-arm64/* mnt/</span><br></pre></td></tr></table></figure> </li><li>卸载此镜像 <code>sudo umount mnt</code></li><li>使用 e2fsck 修复文件系统，因为我们是将一个小的文件系统塞入了一个大的镜像中，不修复存储可能会有问题，<code>e2fsck -p -f ubuntu_rootfs.img</code></li><li>如果想要最小化文件系统，就输入<code>resize2fs -M ubuntu.ext4</code>，否则就什么也不用做了。</li></ol><h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>最终，ubuntu.ext4 即为我们需要的根文件系统镜像。</p><p>本文参考了 <a href="https://blog.csdn.net/weixin_46025014/article/details/131682463">构建Ubuntu20.04根文件系统并移植到RK3568</a>，并有一些自己的想法，更多细节可以参考此文。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 记忆留存 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>扩充ext4镜像的几种方法</title>
+      <link href="/posts/60155/"/>
+      <url>/posts/60155/</url>
+      
+        <content type="html"><![CDATA[<h1 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h1><p>使用 ext4 镜像作为文件系统时，如果需要向其中添加某些大型文件，则可能会遇到镜像空间不足的问题，本篇尝试对此给出几种解决方案。</p><h1 id="无大小对齐要求的扩容"><a href="#无大小对齐要求的扩容" class="headerlink" title="无大小对齐要求的扩容"></a>无大小对齐要求的扩容</h1><p>如果对最终的大小没有对齐要求，则可以直接采用如下方式：</p><ol><li>创建一个空的镜像，需求扩容多大创建多大：<code>dd if=/dev/zero of=blank.ext4 bs=1M count=需求大小</code></li><li>将额外的空白文件追加到镜像文件中：<code>cat blank.ext4 &gt;&gt; myimage.ext4</code></li><li>修复文件系统：<code>e2fsck -f myimage.ext4</code></li><li>调整文件系统大小：<code>resize2fs myimage.ext4</code></li></ol><h1 id="有大小对齐要求的扩容"><a href="#有大小对齐要求的扩容" class="headerlink" title="有大小对齐要求的扩容"></a>有大小对齐要求的扩容</h1><h2 id="操作"><a href="#操作" class="headerlink" title="操作"></a>操作</h2><p>如果对最终的大小有对齐要求，则推荐创建一个指定大小的空的ext4新镜像，将旧镜像内容复制到新的镜像中：</p><ol><li>创建一个空的镜像，需求扩容多大创建多大：<code>dd if=/dev/zero of=myimage.ext4 bs=1M count=需求大小</code></li><li>在空镜像上建立ext4文件系统：<code>mkfs.ext4 myimage.ext4</code></li><li>将空镜像、旧镜像挂载：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> myimage</span><br><span class="line">sudo mount myimage.ext4 myimage</span><br><span class="line"><span class="built_in">mkdir</span> oldimage</span><br><span class="line">sudo mount oldimage.ext4 oldimage</span><br></pre></td></tr></table></figure> </li><li>将旧镜像内容复制到新的镜像中：<code>cp -r ./oldimage/. myimage</code></li><li>卸载空镜像、旧镜像<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo umount myimage</span><br><span class="line">sudo umount oldimage</span><br></pre></td></tr></table></figure> </li></ol><h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>这种复制方式可能导致镜像中的文件权限位发生变化，如果镜像是一个文件系统，则可以会导致一些权限问题，例如使用镜像中的文件系统时，使用 sudo 命令，会提示：<code>/usr/bin/sudo 必须属于用户 ID 0(的用户)并且设置 setuid 位</code>,这就是由于 sudo 可执行文件的权限位被改导致的，修复方法如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 4755 /usr/bin/sudo</span><br><span class="line"><span class="built_in">chmod</span> 755 /usr</span><br></pre></td></tr></table></figure><br>详细修复方法见此篇<a href="https://www.cnblogs.com/chxwkx/p/10686864.html">文章</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hypervisor 学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 记忆留存 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>uboot-FIT-image 学习</title>
       <link href="/posts/27296/"/>
       <url>/posts/27296/</url>
@@ -391,7 +441,7 @@
       <link href="/posts/17528/"/>
       <url>/posts/17528/</url>
       
-        <content type="html"><![CDATA[<p>使用 Linux 虚拟机的过程中出现了系统盘空间不足的问题，挂载了新的空间也不行，这是由于实际上并没有扩容系统盘的原因。现总结无损扩容系统盘的方法：</p><h1 id="第一步"><a href="#第一步" class="headerlink" title="第一步"></a>第一步</h1><p>在 VBox 里面扩容磁盘</p><p><img src="虚拟介质.png" alt="虚拟介质.png"></p><p>此时打开虚拟机会发现仍然空间不足，因为新增的这部分磁盘仍然不可用。</p><h1 id="第二步"><a href="#第二步" class="headerlink" title="第二步"></a>第二步</h1><p>查看系统盘是哪一个，输入 <code>df -h</code> 查看，挂载点为根目录，即<code>\</code>的即为系统盘，记住它的名字</p><p><img src="查看系统盘.png" alt="查看系统盘.png"></p><h1 id="第三步"><a href="#第三步" class="headerlink" title="第三步"></a>第三步</h1><ul><li><p>扩容分区，管理员权限下输入<code>parted</code></p></li><li><p>输入<code>print /dev/sda</code>查看磁盘分区信息和扩容目标分区的编号</p></li></ul><p><img src="查看分区信息.png" alt="查看分区信息.png"></p><p>对照一下之前记住的名字和大小，就知道要扩容哪一个编号。</p><ul><li>输入<code>resize 对应编号</code>，输入结束点（就是在现有结束点上加上你扩容的大小）</li></ul><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(parted)resizepart <span class="number">4</span></span><br><span class="line">警告<span class="punctuation">:</span> 分区 /dev/sda4 正被使用。你确定要继续吗?</span><br><span class="line">是/Yes/否/No? yes                                                         </span><br><span class="line">结束点？  <span class="punctuation">[</span><span class="number">21</span>GB<span class="punctuation">]</span>? <span class="number">30</span>GB</span><br></pre></td></tr></table></figure><div class="note purple no-icon flat"><p>此时只是扩展了分区大小，但这部分仍然没有被文件系统管理，所以仍然无法使用</p></div><h1 id="第四步"><a href="#第四步" class="headerlink" title="第四步"></a>第四步</h1><ul><li>扩展文件系统，输入：<code>resize2fs 系统盘的名字</code>，会把文件系统扩容到增加的空间上。</li></ul><h1 id="第五步"><a href="#第五步" class="headerlink" title="第五步"></a>第五步</h1><p>重启使用 <code>df -h</code> 查看是否扩容成功。</p><h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><img src="https://zhuanlan.zhihu.com/p/510655363" alt="linux下无损扩容分区方法"></p>]]></content>
+        <content type="html"><![CDATA[<p>使用 Linux 虚拟机的过程中出现了系统盘空间不足的问题，挂载了新的空间也不行，这是由于实际上并没有扩容系统盘的原因。现总结无损扩容系统盘的方法：</p><h1 id="第一步"><a href="#第一步" class="headerlink" title="第一步"></a>第一步</h1><p>在 VBox 里面扩容磁盘</p><p><img src="虚拟介质.png" alt="虚拟介质.png"></p><p>此时打开虚拟机会发现仍然空间不足，因为新增的这部分磁盘仍然不可用。</p><h1 id="第二步"><a href="#第二步" class="headerlink" title="第二步"></a>第二步</h1><p>查看系统盘是哪一个，输入 <code>df -h</code> 查看，挂载点为根目录，即<code>\</code>的即为系统盘，记住它的名字</p><p><img src="查看系统盘.png" alt="查看系统盘.png"></p><h1 id="第三步"><a href="#第三步" class="headerlink" title="第三步"></a>第三步</h1><ul><li><p>扩容分区，管理员权限下输入<code>parted</code></p></li><li><p>输入<code>print /dev/sda</code>查看磁盘分区信息和扩容目标分区的编号</p></li></ul><p><img src="查看分区信息.png" alt="查看分区信息.png"></p><p>对照一下之前记住的名字和大小，就知道要扩容哪一个编号。</p><ul><li>输入<code>resize 对应编号</code>，输入结束点（就是在现有结束点上加上你扩容的大小）</li></ul><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(parted)resizepart <span class="number">4</span></span><br><span class="line">警告<span class="punctuation">:</span> 分区 /dev/sda4 正被使用。你确定要继续吗?</span><br><span class="line">是/Yes/否/No? yes                                                         </span><br><span class="line">结束点？  <span class="punctuation">[</span><span class="number">21</span>GB<span class="punctuation">]</span>? <span class="number">30</span>GB</span><br></pre></td></tr></table></figure><div class="note purple no-icon flat"><p>此时只是扩展了分区大小，但这部分仍然没有被文件系统管理，所以仍然无法使用</p></div><h1 id="第四步"><a href="#第四步" class="headerlink" title="第四步"></a>第四步</h1><ul><li>退出 parted，回到shell</li><li>扩展文件系统，输入：<code>resize2fs 系统盘的名字</code>，会把文件系统扩容到增加的空间上。</li></ul><h1 id="第五步"><a href="#第五步" class="headerlink" title="第五步"></a>第五步</h1><p>重启使用 <code>df -h</code> 查看是否扩容成功。</p><h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><img src="https://zhuanlan.zhihu.com/p/510655363" alt="linux下无损扩容分区方法"></p>]]></content>
       
       
       <categories>
@@ -402,6 +452,8 @@
       
       
         <tags>
+            
+            <tag> 记忆留存 </tag>
             
             <tag> 虚拟机配置 </tag>
             
@@ -1593,33 +1645,11 @@
     
     
     <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>archives</title>
       <link href="/archives/index.html"/>
       <url>/archives/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>音乐</title>
-      <link href="/music/index.html"/>
-      <url>/music/index.html</url>
-      
-        <content type="html"><![CDATA[<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=780 height=900 src="//music.163.com/outchain/player?type=0&id=8106272779&auto=1&height=430"></iframe>]]></content>
       
     </entry>
     
@@ -1637,11 +1667,33 @@
     
     
     <entry>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>分类</title>
       <link href="/categories/index.html"/>
       <url>/categories/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>音乐</title>
+      <link href="/music/index.html"/>
+      <url>/music/index.html</url>
+      
+        <content type="html"><![CDATA[<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=780 height=900 src="//music.163.com/outchain/player?type=0&id=8106272779&auto=1&height=430"></iframe>]]></content>
       
     </entry>
     
