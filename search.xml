@@ -4,6 +4,58 @@
   
     
     <entry>
+      <title>ZCU102提升-USB 理论研究</title>
+      <link href="/posts/60292/"/>
+      <url>/posts/60292/</url>
+      
+        <content type="html"><![CDATA[<h2 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h2><p>最近在研究 ZCU102 的 USB 模块，借此把此 USB 模块及其边缘内容一起研究总结一下。</p><h2 id="实物结构"><a href="#实物结构" class="headerlink" title="实物结构"></a>实物结构</h2><p><img src="实物结构.png" alt="实物结构"><br>ZCU102 的 USB 接口在图中 5 标，其中用红框圈起来的是跳线位置，关于跳线是什么后面会介绍。</p><p>USB 接口为不常见的 Micro USB（3.0） Type-B 接口，主要用于移动硬盘盒。</p><p><img src="Micro-B.png" alt="Micro-B"></p><p>我不是很理解为什么 ZCU102 USB 做成了如此罕见的接口，让使用变得困难，但好在 ZCU102 开发板随箱子附带了 TypeB 转 Type-A 母口的转换器。</p><p><img src="Micro-A.png" alt="Micro-A"></p><h2 id="USB-模块架构图"><a href="#USB-模块架构图" class="headerlink" title="USB 模块架构图"></a>USB 模块架构图</h2><p>本篇文章以下图作为主线，分别对每个模块展开研究。<br><img src="USB结构.png" alt="USB结构"></p><h2 id="USB-MIO"><a href="#USB-MIO" class="headerlink" title="USB MIO"></a>USB MIO</h2><p><img src="USB-MIO.jpg" alt="USB-MIO.jpg"></p><h3 id="GPIO"><a href="#GPIO" class="headerlink" title="GPIO"></a>GPIO</h3><p>GPIO 是一种芯片与外部电路相连接的<strong>引脚（划重点）</strong>，全称是 General Purpose Input Output 通用功能输出输出，目的是实现功能复用，其结构如图所示，左边接到外设、右边接到芯片。</p><p><img src="GPIO引脚.png" alt="引脚结构图"></p><p>功能复用是指：GPIO的引脚可以由CPU配置成不同的工作模式和工作电压，一共有八种工作模式：上拉输入、下拉输入、浮空输入、模拟输入、推挽输出、开漏输出、复用推挽输出、复用开漏输出。</p><div class="note purple no-icon flat"><p>举个例子，在输入功能下，CPU可以通过该GPIO的来获取外部电路输入的<strong>电平状态（划重点）</strong>，其中，上拉输入默认接一个上拉电阻，此时就算IO引脚没有外部输入信号时  CPU也能读到一个高电平，只有在外部电路输入低电平的时候 CPU 读取到的才是低电平，电路走向如图：</p></div><p><img src="上拉输入.png" alt="上拉输入"></p><p>更多工作图示可以参照这两篇文章：</p><ol><li><a href="https://blog.csdn.net/m0_73232447/article/details/130387679">什么是GPIO？(详细介绍)</a></li><li><a href="https://blog.csdn.net/joker520522/article/details/142768029">一文带你搞懂有关于 GPIO 的一切</a></li></ol><h3 id="MIO、EMIO、AXI-GPIO"><a href="#MIO、EMIO、AXI-GPIO" class="headerlink" title="MIO、EMIO、AXI_GPIO"></a>MIO、EMIO、AXI_GPIO</h3><p>MIO、EMIO、AXI_GPIO 是 Xilinx 对 GPIO 的进一步细化，分别属于 GPIO 的一种类型。</p><ul><li>MIO是属于PS端的固定IO口，使用时不需要消耗PL端的资源；</li><li>EMIO是通过PL进行扩展的IO口，使用时需要分配PL端的引脚，消耗PL端资源，配置完成后和 MIO 一样的用法，属于 PS 端。</li><li>AXI_GPIO是Xilinx封装好的IP核，是 PS 端通过AXI GP总线控制 PL 端的 IO 口技术，使用时需要消耗 PL 端资源。</li></ul><p>可以看出，如果要在 PS 使用 GPIO，最好用的是 MIO，其次是 EMIO。</p><p>进一步介绍可以参照这篇文章，以上的理解对于本文来说就够了。</p><ol><li><a href="https://www.cnblogs.com/amxiang/p/16880043.html">MIO、EMIO、AXI_GPIO</a></li></ol><h3 id="USB-MIO-1"><a href="#USB-MIO-1" class="headerlink" title="USB MIO"></a>USB MIO</h3><p>回到正题，经过以上的介绍，可以明白 USB MIO 其实就是 左端连接 USB 外设，右端连接芯片的 GPIO。</p><h2 id="USB-GTR"><a href="#USB-GTR" class="headerlink" title="USB GTR"></a>USB GTR</h2><p><img src="USB-GTR.jpg" alt="USB GTR"></p><h3 id="高速收发器简介"><a href="#高速收发器简介" class="headerlink" title="高速收发器简介"></a>高速收发器简介</h3><p>UltraScale+ MPSoc FPGA 中集成有三种高速收发器，GTH、GTY和GTR。</p><ul><li>GTH：性能最高，可达 400+Gb/s系统、大规模仿真和高性能计算计算的理想选择。</li><li>GTY：提供 500 Mb/s 至 16.375 Gb/s 的传输速度。</li><li>GTR: 仅用于 PS 端，集成五个通用协议：DisplayPort、Ethernet、SGMII、PCIe、SATA、USB3.0</li></ul><h3 id="高速收发器技术"><a href="#高速收发器技术" class="headerlink" title="高速收发器技术"></a>高速收发器技术</h3><p>三种收发器底层技术一致、都是 SerDes。SerDes 是 SERializer （串行器）/ DESerializer （解串器）的简称，是一种串行收发技术。串行器在发送端将接收多行并行输入数据，并将其压缩成较少的数据行再串行输出；而解串器就是在接收端，将序列化的串行数据作为输入、恢复并输出原始并行数据。收发通道独立，直接从数据线中提取时钟，所以这种技术只需要两对差分线就能完成全双工高速数据收发，减少了芯片的引脚数和外围 PCB 布线的数量，减少设计的成本及外围电路的布线空间，特别适用于现代高速数字系统。</p><p><img src="SerDes.jpg" alt="SerDes"></p><p>进一步介绍可以参照这篇文章，以上的理解对于本文来说就够了。</p><p><a href="https://zhuanlan.zhihu.com/p/176099241">ZYNQ UltraScale+ MPSoc FPGA自学笔记-高速收发器</a></p><h3 id="USB-GTR-1"><a href="#USB-GTR-1" class="headerlink" title="USB GTR"></a>USB GTR</h3><p>由上可知，USB GTR 其实和 USB MIO 类似，就是左端连接 USB 外设，右端连接芯片的高速收发器。<strong>内置支持了 USB 3.0 协议（划重点）。</strong></p><h2 id="GTR-MUX-USB-3-0"><a href="#GTR-MUX-USB-3-0" class="headerlink" title="GTR MUX USB 3.0"></a>GTR MUX USB 3.0</h2><p><img src="USB-GTR-MUX.jpg" alt="MUX"></p><p>这部分比较简单，这个部件的功能就是将 USB Connector 的信号转换为 GTR tx 以便 USB GTR 接收，将芯片通过 USB GTR 发来的信号转为 USB Connetor 可以发送的信号。</p><h2 id="SM3320-USB-2-0"><a href="#SM3320-USB-2-0" class="headerlink" title="SM3320 USB 2.0"></a>SM3320 USB 2.0</h2><p><img src="SM3320.jpg" alt="SM3320"></p><p>USB3320是一个高速USB 2.0 PHY，支持 UTMI+ 低pin接口(ULPI)接口标准。此为本文重点。</p><h3 id="USB-PHY"><a href="#USB-PHY" class="headerlink" title="USB PHY"></a>USB PHY</h3><p>芯片厂商开发了一些USB PHY芯片，可以把DP、DM上的差模信号转成共模信号。</p><p>USB PHY负责最底层的信号转换，作用类似于网口的 PHY。</p><p>USB信号传输前，需要通过 PHY 把USB控制器的数字信号转成线缆上的模拟信号。</p><p>关于什么是数字信号，什么是模拟信号，简单来说，数字信号就是01这样的电平信号，模拟信号就是连续的电压、电流变化。</p><p><img src="数字信号.png" alt="数字信号"></p><p><img src="模拟信号.png" alt="模拟信号"></p><p>具体可以参照这篇文章：</p><ol><li><a href="https://zhuanlan.zhihu.com/p/527886636">模拟信号和数字信号，傻傻分不清楚？</a></li></ol><div class="note orange no-icon flat"><p>USB3320 存在的意义就是如此，芯片里面的USB控制器数字信号通过 MIO 到达 USB3320，USB3320 将其转换为线缆上的模拟信号。</p></div><h3 id="USB-总线类型"><a href="#USB-总线类型" class="headerlink" title="USB 总线类型"></a>USB 总线类型</h3><p>USB 控制器和 PHY 之间的总线主要有3种：一种是ULPI，一种是UTMI+，还有一种是HSIC。</p><ul><li><p>UTMI协议的全称是 USB2.0 Transceiver Macrocell Interface：是一种用于USB controller和USB PHY通信的协议。相对于ULPI，UTMI有更多的控制信号，支持8bit/16bit 数据接口。</p></li><li><p>ULPI协议的全称是 UTMI+ Low Pin Interface。从名字上就可以看出ULPI是UTMI的Low Pin版本。从一开始给出的结构图可以看到，ZCU102 这里通信总线用的就是 ULPI，目的是为了减少 MIO 口的使用，此观点有 Xilinx 用户手册背书。</p></li></ul><div class="note green no-icon flat"><p>Use of the ULPI standard reduces the interface pin count between the USB controller IP and the PHY device. </p><p>使用 ULPI 标准减少 USB 控制器 IP 和 PHY 设备间的引脚数量。</p></div><p>更多 USB 内容参考:</p><ol><li><a href="https://blog.csdn.net/weixin_66510961/article/details/137240781">35-USB PHY—-ULPI &amp; UTMI+ &amp; HSIC</a></li></ol><h3 id="控制-SM3320"><a href="#控制-SM3320" class="headerlink" title="控制 SM3320"></a>控制 SM3320</h3><p>在 ZCU102 上，SM3320 通过板上跳线装置进行控制，跳线在一开始实物图的红框位置，一共有五处：</p><p><img src="跳线.png" alt="跳线"></p><p><strong>可以移动跳线帽使得 ZCU102 的 USB 处于不同的工作模式。</strong></p><h4 id="跳线与跳线帽"><a href="#跳线与跳线帽" class="headerlink" title="跳线与跳线帽"></a>跳线与跳线帽</h4><p>跳线是主板上的引脚，如图所示：</p><p><img src="跳线实物.png" alt="跳线实物"></p><p>这些引脚可以通过“电线”导通，使得主板电路发生改变，进而使得主板的功能/性能发生改变，而这里的“电线”就是跳线帽：</p><p><img src="跳线帽.png" alt="跳线帽"></p><p>完整定义如下：跳线帽（jumper cap）是一种小型连接器，用于在电路板上的引脚间建立或断开电气连接。它通过手动插拔的方式调整电路功能或配置，从而改变电路行为。</p><p>更多可以参考如下文章：</p><ol><li><a href="https://blog.csdn.net/penny_cheng04/article/details/109393403">基础1-跳线帽</a></li><li><a href="https://blog.csdn.net/m0_57407372/article/details/143994109">【跳线帽】是什么？怎么用？</a></li></ol><h4 id="ZCU102-默认跳线"><a href="#ZCU102-默认跳线" class="headerlink" title="ZCU102 默认跳线"></a>ZCU102 默认跳线</h4><p>如果未曾手动插拔过 ZCU102 USB 的跳线，那么跳线帽将处于如下的默认位置：</p><p><img src="默认位置.png" alt="默认位置.png"></p><p>对照一下前面的五处跳线不同位置对应的模式，可以发现 ZCU102 USB 默认是以 Device 模式工作。</p><h4 id="USB-工作模式"><a href="#USB-工作模式" class="headerlink" title="USB 工作模式"></a>USB 工作模式</h4><p>USB 设备一共有三种工作模式：Device、Host、OTG模式</p><ul><li>Device：设备受到 Host 设备的控制，被动进行数据交互，例如 U 盘，键盘鼠标。</li><li>Host：向 Device 提供电力、主动进行数据交互，控制 Device USB 设备，例如 PC。</li><li>OTG：全称是 On the go。可以通过和连接设备协商成为 Host 或者 Device。</li></ul><p>OTG 的出现主要是考虑到手机这样的设备只有一个 USB 口，但其发挥的功能同时涉及了 Host 和 Device，例如连接 PC 传输文件，手机就是 Device，但 U盘连接手机，手机就是 Host。</p><p>OTG 的协商通过 USB_ID 这一输入信号完成，连接设备后，USB_ID 脚为低电平则作为 host 端，对外供电；若id脚悬空，则作为 device端。</p><p>USB 协议只能是 Host 与 Device 间通信。若不能通信，两端都是 Device 或都是 Host。</p><div class="note purple no-icon flat"><p>OTG 似乎可以替代 Device、Host。但其实不然，现在 Host、Device 支持的设备要多于 OTG。</p></div><p>更多细节查看下文：</p><ol><li><a href="https://www.cnblogs.com/zhuangquan/p/15428992.html">《开发板 —— USB的host、device、otg模式》</a></li><li><a href="https://blog.csdn.net/mcsbary/article/details/93975564">USB host、usb device、USB OTG的判断</a></li><li><a href="https://blog.csdn.net/mcsbary/article/details/93975564">USB HOST与 USB OTG的区别及工作原理</a></li><li><a href="https://baijiahao.baidu.com/s?id=1820509902891543605">瑞芯微RK3566开发板USB OTG模式介绍及切换方法，触觉智能EVB3566主板鸿蒙硬件方案详解</a></li></ol><h3 id="区别于-USB-3-0"><a href="#区别于-USB-3-0" class="headerlink" title="区别于 USB 3.0"></a>区别于 USB 3.0</h3><p>看到这里，可能会有人好奇，为什么 USB 2.0 需要 SM3320 这样的 PHY 设备，而 USB 3.0 不需要？</p><p><img src="USB3.0不需要PHY的原因.png" alt="USB3.0不需要PHY的原因.png"></p><p>还记得前面画的重点吗？MIO 接受的是电平信号，这是一种数字信号，所以需要 PHY 进行转换。而 USB3.0 直接通过了 GTR 高速收发器完成信号交互，所以不再需要转换。</p><p>原文链接如下：</p><ol><li><a href="https://adaptivesupport.amd.com/s/question/0D54U00007L7YOPSA3/zynq-ultrascale-mpsoc-with-usb-30?language=zh_CN">Zynq Ultrascale MPSoC with USB 3.0</a></li></ol><h2 id="Connector"><a href="#Connector" class="headerlink" title="Connector"></a>Connector</h2><p><img src="USB-Connector.jpg" alt="USB-Connector.jpg"></p><p>这是全文的最后一部分，也比较简单，这里的 Connector 我认为指的就是前文的 Micro USB（3.0） Type-B 接口。</p><p>但值得一提的是，ZCU102 在这个接口上实现了 USB 2.0 和 USB 3.0 的复用。</p><p>根据所连接设备，如果支持 3.0，则通过 GTR 这一条路进行交互，否则通过 SM3320 进行交互。</p><p>至于如何识别连接设备支持 2.0 还是 3.0，是通过主从设备之间的信息交互完成的，具体参考这篇文章：</p><ol><li><a href="https://www.zhihu.com/question/27122260">USB如何向下兼容的？</a></li></ol><h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>终于写完这篇文章了，笔者水平有限，学习一个 ZCU102 的 USB 模块发散了很多需要学习的问题，参照了很多前人的文章。</p><p>希望后来者可以借此减轻学习负担。如果有错误之处还请海涵。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> FPGA </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ZCU102 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Vue3 + Fastapi 前后端框架搭建</title>
+      <link href="/posts/45361/"/>
+      <url>/posts/45361/</url>
+      
+        <content type="html"><![CDATA[<h1 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h1><p>时隔一年，重走前后端开发路，正好比较有时间，打算好好将开发过程中有价值的点记录一下，对自己也是一种记忆，也方便后来使用相同框架的人快速上手。</p><h1 id="Vue3-前端"><a href="#Vue3-前端" class="headerlink" title="Vue3 前端"></a>Vue3 前端</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p><img src="Vuetify.png" alt="Vuetify.png"></p><p>截止 2025 年 1 月 22 日，Vuetify 3 框架在 github 上有着 40.2 k 的 Star，我在前几年完全没听过这个，可见其这几年发展之快。</p><p>笔者了解了一下发现其组件较为全面，社区也比较完善。并且完全开源</p><h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>从原生的 vite 搭建 vue3 前端我认为是吃力不讨好的，所以直接基于 <a href="https://vuetifyjs.com/zh-Hans/getting-started/installation/#section-5f0059cb4f7f7528-vuetify-3">Vuetify 3 框架</a>的模板来作为前端的 base。</p><p>初始化模板非常简单，只需要 <code>npm create vuetify@latest</code> 即可，期间会有一些选项要求配置，例如：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">success Installed <span class="string">&quot;create-vuetify@x.x.x&quot;</span> with binaries:</span><br><span class="line">    - create-vuetify</span><br><span class="line"></span><br><span class="line">? Project name (项目名): ❯ vuetify-project //生成应用程序的文件夹</span><br><span class="line">? Use TypeScript (使用 TypeScript)?: ❯ No / Yes</span><br><span class="line">? Would you like to install dependencies with yarn, npm, or pnpm?:</span><br><span class="line">  ❯ yarn</span><br><span class="line">    npm</span><br><span class="line">    pnpm</span><br><span class="line">    bun</span><br><span class="line">    none</span><br></pre></td></tr></table></figure> </p><p>选择的时候，使用小键盘上下左右来进行选择，需要注意的是界面不是实时更新，按下方向键后需要按下回车来更新选项，然后再次回车进行确认。</p><h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><p>进入目录后 <code>npm run dev</code> 就可以了。</p><p>命令行正常运行如图：<br><img src="VueRun.png" alt="VueRun.png"></p><p>访问 localhost:3000 如图：<br><img src="vuehelloworld.png" alt="vuehelloworld.png"></p><h1 id="FastAPI-后端"><a href="#FastAPI-后端" class="headerlink" title="FastAPI 后端"></a>FastAPI 后端</h1><h2 id="介绍-1"><a href="#介绍-1" class="headerlink" title="介绍"></a>介绍</h2><p><img src="FastAPI.png" alt="FastAPI.png"></p><p>FastAPI 是一个用于构建 API 的现代、快速（高性能）的 web 框架，专为在 Python 中构建 RESTful API 而设计。</p><p>RESTful是一种网络应用程序的设计风格和开发方式，其特点为每一个URI代表一种资源，客户端通过GET、POST、PUT、DELETE等动作，对服务器端资源进行操作。</p><p>FastAPI 使用 Python 3.8+ 并基于标准的 Python 类型提示。</p><p>FastAPI 建立在 Starlette 和 Pydantic 之上，利用类型提示进行数据处理，并自动生成API文档。</p><p>FastAPI 于 2018 年 12 月 5 日发布第一版本，以其易用性、速度和稳健性在开发者中间迅速流行起来。</p><p>FastAPI 支持异步编程，可在生产环境中运行。</p><p>它也是在近几年火起来的，据说非常方便敏捷开发，所以拿来用用看。</p><h2 id="搭建-1"><a href="#搭建-1" class="headerlink" title="搭建"></a>搭建</h2><h3 id="自动搭建"><a href="#自动搭建" class="headerlink" title="自动搭建"></a>自动搭建</h3><p>直接使用 Pycharm 自带的模板创建即可，其会创建一个文件 main.py 并且有一个测试用的 API，直接点击运行则会在 localhost:8000 打开后端，访问对应路径即可测试 API。</p><p><img src="FastRun.png" alt="FastRun.png"></p><h3 id="从头搭建"><a href="#从头搭建" class="headerlink" title="从头搭建"></a>从头搭建</h3><p>自行创建一个虚拟python环境或者conda环境，然后通过 pip 安装 fastapi 和 uvicorn.<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install fastapi</span><br><span class="line">pip install uvicorn</span><br></pre></td></tr></table></figure> </p><p>之后手动创建 main.py，参考 FastAPI 文档写入下述代码：</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> FastAPI <span class="comment"># 导入 FastAPI 包</span></span><br><span class="line"> </span><br><span class="line">app = FastAPI() <span class="comment"># 创建一个对象</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.get(<span class="params"><span class="string">&quot;/&quot;</span></span>) </span><span class="comment"># 一个 helloworld API</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">root</span>():</span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;message&quot;</span>: <span class="string">&quot;Hello World&quot;</span>&#125;</span><br></pre></td></tr></table></figure> <p>之后使用 <code>uvicorn main:app --reload</code> 即可运行 FastApi 后端，解释如下</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">uvicorn 一种 ASGI 服务</span><br><span class="line"></span><br><span class="line">main:文件main.py（python模块）</span><br><span class="line"></span><br><span class="line">app：在模块中app=FastAPI()行中创建的对象</span><br><span class="line"></span><br><span class="line">--reload：代码更改后自动重启服务（上线时该参数值不能为true，降低性能）</span><br></pre></td></tr></table></figure><p><img src="helloworld.png" alt="helloworld.png"></p><h2 id="自定义"><a href="#自定义" class="headerlink" title="自定义"></a>自定义</h2><p>如果需要自定义端口和 host，只需在 main.py 中写 main 函数，运行 main 即可，也省去了命令行手动执行 uvicorn。</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="keyword">import</span> uvicorn</span><br><span class="line">    uvicorn.run(app, host=<span class="string">&#x27;127.0.0.1&#x27;</span>, port=<span class="number">8001</span>)</span><br></pre></td></tr></table></figure> <h2 id="文档查看"><a href="#文档查看" class="headerlink" title="文档查看"></a>文档查看</h2><p>FastAPI 会自动生成 API 交互文档，路径在<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SwaggerUI：http://host:port/docs</span><br><span class="line">ReDoc：http://host:port/redoc</span><br><span class="line">例如：http://<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">8000</span>/docs</span><br></pre></td></tr></table></figure> </p><p>API多起来后看起来还是很方便的。</p><p><img src="API文档.png" alt="API文档.png"></p><h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>只能说现在想要搭一个前后端框架比原来简单很多了，且搭建后内容也非常简约了，就像 FASTAPI 那样，几行就已经创建好一个后端了。</p><p>上述工作参考代码 -&gt; <a href="https://github.com/ForeverYolo/Math-GraduationProject/tree/16f2bed56b0b947abaaee211c25b2670cb71d8df">代码</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 全栈开发 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 记忆留存 </tag>
+            
+            <tag> 模板记录 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>基于ubuntu_base构建文件系统</title>
       <link href="/posts/60156/"/>
       <url>/posts/60156/</url>
@@ -1634,17 +1686,6 @@
     
     
     <entry>
-      <title>关于</title>
-      <link href="/about/index.html"/>
-      <url>/about/index.html</url>
-      
-        <content type="html"><![CDATA[<ul><li>2021-2025 北航<br>感恩每一次相遇！</li></ul>]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>archives</title>
       <link href="/archives/index.html"/>
       <url>/archives/index.html</url>
@@ -1656,9 +1697,42 @@
     
     
     <entry>
-      <title>link</title>
-      <link href="/link/index.html"/>
-      <url>/link/index.html</url>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <url>/about/index.html</url>
+      
+        <content type="html"><![CDATA[<ul><li>2021-2025 北航<br>感恩每一次相遇！</li></ul>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>书籍</title>
+      <link href="/books/index.html"/>
+      <url>/books/index.html</url>
+      
+        <content type="html"><![CDATA[<div class="fj-gallery"><p><img src="https://s1.ax1x.com/2023/01/28/pSanJat.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaurlD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauyOH.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanoZR.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanOzD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaupdI.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauQYV.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaulWT.png" alt=""></p>          </div>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>音乐</title>
+      <link href="/music/index.html"/>
+      <url>/music/index.html</url>
+      
+        <content type="html"><![CDATA[<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=780 height=900 src="//music.163.com/outchain/player?type=0&id=8106272779&auto=1&height=430"></iframe>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -1678,33 +1752,11 @@
     
     
     <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
+      <title>link</title>
+      <link href="/link/index.html"/>
+      <url>/link/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>音乐</title>
-      <link href="/music/index.html"/>
-      <url>/music/index.html</url>
-      
-        <content type="html"><![CDATA[<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=780 height=900 src="//music.163.com/outchain/player?type=0&id=8106272779&auto=1&height=430"></iframe>]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>书籍</title>
-      <link href="/books/index.html"/>
-      <url>/books/index.html</url>
-      
-        <content type="html"><![CDATA[<div class="fj-gallery"><p><img src="https://s1.ax1x.com/2023/01/28/pSanJat.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaurlD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauyOH.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanoZR.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanOzD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaupdI.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauQYV.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaulWT.png" alt=""></p>          </div>]]></content>
       
     </entry>
     
