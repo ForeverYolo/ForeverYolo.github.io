@@ -4,6 +4,33 @@
   
     
     <entry>
+      <title>Structure Pretraining and Prompt Tuning for Knowledge Graph Transfer 论文阅读</title>
+      <link href="/posts/23278/"/>
+      <url>/posts/23278/</url>
+      
+        <content type="html"><![CDATA[<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这篇论文是发表在 WWW’23 上的一篇知识图谱融合方向的论文，使用的是 Transformer 架构。整体思想上借鉴了 NLP 领域的预训练 + 微调的设计思想。</p><ol><li>通过大量的知识图谱训练样本预训练出一个知识图谱模型。</li><li>之后在面对下游任务时冻结模型参数，重新训练 embedding 用于适配下游任务的任务场景。</li><li>继续冻结模型参数，用 Prompt Tuning 的方法将任务表示为 Prompt 的一部分，进行微调，适配下游任务的任务内容。</li></ol><p>论文原文链接：<a href="https://arxiv.org/abs/2303.03922">Structure Pretraining and Prompt Tuning for Knowledge Graph Transfer</a></p><h1 id="相关知识"><a href="#相关知识" class="headerlink" title="相关知识"></a>相关知识</h1><h2 id="知识图谱表示方法"><a href="#知识图谱表示方法" class="headerlink" title="知识图谱表示方法"></a>知识图谱表示方法</h2><p>知识图谱表示方法是指通过模型中的参数和函数对知识图谱中的信息进行编码，它们可以恢复图结构并捕捉实体与关系之间的语义。在分类上，可以分为 3 类：</p><ul><li>基于嵌入的方法：模型直接学习知识图谱三元组中实体和关系的 embedding。经过学习之后，这些 embedding 就可以隐式捕捉知识图谱元素中的相似性、关系、层次、公理等信息。例如 RotatE。</li></ul><blockquote><p>该方法学习到的都是特定关系、实体的 embedding，所以能力范围仅仅局限于训练样本中见过的关系和实体。如果下游任务出现了训练中没有出现过的关系和实体，模型表现就会很差。</p></blockquote><ul><li>基于结构的方法：模型学习知识图谱中的图结构，比如节点之间的距离、度数。由于学习过程中并没有学习特定知识图谱的关系、实体。因此具备处理训练中没有出现过的关系和实体的能力。例如 GraIL。</li><li>混合方法：顾名思义，又学习实体、关系的嵌入表示，又学习图结构。</li></ul><blockquote><p>GNN 可以用于方法 2 和 3，区别在于 GNN 的输入是预先定义好的图结构，还是嵌入表示。<br>Transformer 则可用于方法 1、2、3，具体在于注意力机制的使用。</p></blockquote><h2 id="知识图谱融合方法"><a href="#知识图谱融合方法" class="headerlink" title="知识图谱融合方法"></a>知识图谱融合方法</h2><p>知识图谱近些年主要作为一种重要的附加信息，将其融入特定任务中，用于增强模型在特定任务上的表现，在分类上，可以分为 2 类：</p><ol><li>开箱即用：通常会预先对知识图谱（KGs）进行表示学习，并将训练好的实体和关系表示作为下游模型的输入或用于集成。这种预训练的嵌入在训练下游模型时可以保持固定或进行微调，例如 OntoZSL、EmbedKGQA。</li><li>端到端：设计一个可学习的知识图谱编码器，然后与下游模型一起训练。例如 RippleNet。</li></ol><blockquote><p>端到端这种方法就很类似于现代多模态大模型中输入图片的方法，也是用一个编码器进行的。</p></blockquote><h1 id="模型设计"><a href="#模型设计" class="headerlink" title="模型设计"></a>模型设计</h1><ul><li><p><strong>知识图谱的表达：</strong> 三元组  $${\tau _{in}} = \{ ({h_i},{r_i},{t_i})|i \in [1,k]\} $$ 分别代表头实体、关系、尾实体。例如 $({Obama},{president},{USA})$</p></li><li><p><strong>Transformer输入序列</strong>：将三元组序列化为一系列 token  $${s_{in}} = [[B],{h_1},{r_1},{t_1},[S],{h_2},{r_2},{t_2},...,{h_k},{r_k},{t_k},[S]]$$  其中，<code>[B]</code>和<code>[S]</code>都是特殊的 token，分别代表序列的开始记号和三元组之间的分割记号。</p></li></ul><blockquote><p>[B] 的作用是汇聚序列的全局信息，这在 Transformer 中很常见。<br>[S] 的作用是分割，这是因为 h，r，t 可能需要不止固定的 3 个 token 来表示，所以需要分隔符。</p></blockquote><ul><li><strong>注意力矩阵</strong>：用于建模图结构，即三元组之间的邻居关系。 $$\eqalign{  & M = \left\{ {\matrix{   {\matrix{   1 & {i = 1|j = 1}  \cr  } }  \cr    {\matrix{   1 & {trp(i) \cap trp(j) \ne \phi }  \cr  } }  \cr    {\matrix{   0 & {otherwise}  \cr  } }  \cr  } } \right\}  \cr   & \matrix{   {trp(i) = \{ {h_p},{r_p},{t_p}\} } & {p = \left\lfloor {(i - 2)/4} \right\rfloor }  \cr  }  + 1 \cr} $$ 这里的 <code>i,j</code> 代表了序列中的 token 下标，M 中的第一栏是为了让 <code>[B]</code> 可以注意到全部的三元组，进而聚合全局信息，第二栏代表的是三元组的一跳、二跳邻居、具有相同关系的三元组可以互相关注，其余的三元组之间不能互相关注。</li></ul><blockquote><p>这个 M 矩阵本质建模出了知识图谱的图结构，用于解决在输入序列中，可能有关系的两个三元组距离相差很远的情况。<br>另外，相比于 GNN 可以<strong>一次就关注到二跳邻居</strong>，计算上比较有效率。<br>最后，这里 $p$ 的计算方式，其实默认了 $h,r,t$ 只用 3 个 token，不然是对不上的。</p></blockquote><ul><li><strong>注意力计算</strong>： $$\eqalign{  & H = {[s_1^T,...,s_n^T]^T} \in {R^{n \times d}}  \cr   & Q = H{W_Q},K = H{W_K},V = H{W_v}  \cr   & A = {{Q{K^T} \odot M} \over {\sqrt {{d_k}} }} + (1 - M) \times \delta   \cr   & Attn(H) = soft\max (A)V \cr} $$这里的 $\delta$ 是一个非常大的负数，用于把 $ M_{ij} = 0 $ 对应的 $A_{ij}$ 在 Softmax 后拉为 0。<br>$s_i$ 代表一个个 token。</li></ul><h1 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h1><p>训练使用知识图谱的子图进行训练：设子图为 G，首先随机在图中选一个实体 e</p><ol><li>随机游走：选择 $ (e^{‘},r,e) $ 或者 $ (e,r,e^{‘}) $，然后选定实体 $ e^{‘} $，重复上述操作 k 次。</li><li>中心游走：首先将 e 的一跳邻居全部纳入子图 G，如果加入的三元组数量小于 k，则再随机加入 $ n - k $ 个二跳邻居 </li></ol><p>数据来源于 WN18RR, FB15k-237 和 Codex， 论文进行了部分处理。</p><p><img src="子图构建.png" alt="子图构建"></p><h1 id="训练方法"><a href="#训练方法" class="headerlink" title="训练方法"></a>训练方法</h1><p>类似于 NLP 的预训练任务，论文定义了 3 种预训练任务：</p><ul><li>实体掩码建模（MEM）: 随机替换一些实体为特殊掩码 Token <code>[M]</code>，取出最后一层特殊掩码的隐藏状态 $ S^{m}_{e} $，使用一个还原矩阵 $ W_{MEM} $，将该隐藏状态还原为真实实体 Embedding，然后和真实的实体 Embeeding 做内积，比较相似程度，使用二元交叉熵损失。</li></ul> $${L_{MEM}}({G_e}) = \sum\limits_{e \in {M_e}} {CE(S_e^m{W_{MEM}}E{{(e)}^T},1)}  + \sum\limits_{{e^{'}} \in \Delta } {CE(S_e^m{W_{MEM}}E{{({e^{'}})}^T},0)} $$ <blockquote><p>这里论文选取了一些负例，损失函数本质上是拉近和正例的距离，拉远和负例的距离，最终变为了二分类交叉熵损失。</p><p>这是因为实体有很多种，使用多分类交叉熵分类数会很多，计算效率有问题。</p></blockquote><ul><li>关系掩码建模（MRM）：随机替换一些关系为特殊掩码 Token <code>[M]</code>，取出最后一层特殊掩码的隐藏状态 $ S^{m}_{e} $，使用一个还原矩阵 $ W_{MRM} $，将该隐藏状态还原为真实关系 Embedding，然后和真实的关系 Embedding 做内积，得出相似程度，之后用 MLP 进行分类，使用多元交叉熵损失。</li></ul> $${L_{MRM}}({G_e}) = \sum\limits_{r \in {M_r}} {CE(MLP(s_r^m{W_{MRM}}),{l_r})} $$ <div class="note purple no-icon flat"><p>这里解释一下还原矩阵 $ W_{MRM} $，论文中没有解释这个矩阵怎么来，Gemini 3 Pro 的理解是：$ W_{MRM}$ 的每一行（或列）直接对应一个具体的关系 Embedding， $ W_{MEM} $ 也同理。</p><p>我第一感觉是觉得很奇怪的，<font color=red>毕竟 $ S^{r}_{e} $ 是经过几层 Transformer 后的隐藏层输出，怎么能和一开始的 embedding 做内积呢？</font>  Gemini 3 Pro 的理解是： 这正是模型要学习的目标——学习如何通过复杂的 Transformer 运算，将杂乱的图结构（Structure），准确地映射到<strong>简洁的逻辑关系（Relation）</strong>上。从而让 Transformer 专心学习“如何从结构中提取逻辑”（这是通用的能力）。</p><p>我是觉得有道理，但不保真，希望看到这里的同仁谨慎思考，要是有正确答案欢迎分享给我，让我学习一下，谢谢！</p></div><ul><li>实体对建模（EPM）：给定两个子图 $ G_{e_{i}} $ 和 $ G_{e_{j}} $，损失函数设计如下： $${L_{MRM}}({G_{{e_i}}},{G_{{e_j}}}) = \sum\limits_{r \in {M_r}} {CE(MLP([s_{{{[B]}_{{e_i}}}}^m||s_{{{[B]}_{{e_j}}}}^m]),{l_{({e_i},{e_j})}})} $$ <code>[B]</code> 是之前提到的用来汇聚全局信息的 token，这里是将两个子图的全局信息 token 的最后一层隐藏层进行拼接然后进入 MLP 打分，得到两个图的相似程度。<br>损失函数使用交叉熵，  $ {{l_{({e_i},{e_j})}}}$  就是人为给的相似程度标签（0，1）</li></ul><div class="note orange no-icon flat"><p>经过上述预训练，模型已经掌握了大量通用的知识图谱的结构信息，接下来就是对下游任务进行适配微调。</p></div><h1 id="微调方法"><a href="#微调方法" class="headerlink" title="微调方法"></a>微调方法</h1><ol><li><p>由于下游任务的实体、关系可能并不在预训练中出现过，可能没有对应的 embedding 表示，所以在保持模型参数固定的情况下，在下游任务上进行上述三项训练，学习到下游任务的 embedding 表示。</p></li><li><p>使用 Prompt Tuning，对任务构建一个三元组：</p> $${T_{task}} = [[T][H][R][D]]$$  <p>其中，<code>[T]</code> 是特殊标记，代表任务序列的开始，<code>[H]</code> 和 <code>[R]</code> 代表头实体和关系，<code>[D]</code> 代表尾实体，其表示是从和任务相关的编码器中编码得到的。<br>将任务三元组拼接到输入序列中，之后使用最后一个隐藏层的部分 token 输出进入解码器进行微调训练，保持模型全部参数固定。</p></li></ol><blockquote><p>这里有一点难理解，没关系，在实验中会举几个例子帮助理解。</p></blockquote><h1 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h1><ol><li>零样本图片分类：知识图谱给出信息，辅助图片分类。<br><img src="零样本图片分类.png" alt="零样本图片分类"><br>这里面： $${T_{task}} = [[T][C][M][V]]$$ <code>[C]</code> 是常规的实体嵌入，<code>[M]</code> 是 MASK 掩码， <code>[V]</code> 是图片经由 Vison Encoder 后的输出。序列经过模型后，取出 $ S^{[B]}_{e} $ 和 $ S^{[V]}_{e} $，将他们使用 MLP 进行投影，计算相似度。就能得知图片是否属于 <code>[C]</code> 代表的类。<br>实验结果：<img src="零样本图片分类结果.png" alt="零样本图片分类结果"></li><li>三元组分类：知识图谱给出信息，判断三元组是否为真。<br><img src="三元组分类.png" alt="三元组分类"><br>这里面: $${T_{task}} = [[T][h][r][t]]$$  比较简单，就是常规的三元组。序列经过模型后，取出 $ S^{[B]}_{e} $ 和 $ S^{[T]}_{e} $。拼接后使用 MLP 进行打分，判断 <code>(h, r, t)</code> 的真实性。<br>实验结果：<img src="三元组分类结果.png" alt="三元组分类结果"></li><li>知识问答：知识图谱给出信息，判断Q和A是否对应。<br><img src="QA.png" alt="QA"><br>这里面： $${T_{task}} = [[T][M][M][Q]]$$ <code>[M]</code> 是 MASK 掩码，<code>[Q]</code> 是QA文本经由 NLP Encoder 后的输出。序列经过模型后，取出 $ S^{[B]}_{e} $ 和 $ S^{[Q]}_{e} $ 和 QA 经过 NLP Encoder 后的输出，将他们拼接后使用 MLP 预测 QA 正确的可能性。<br>实验结果：<img src="QA结果.png" alt="QA结果"></li></ol><h1 id="论文后续"><a href="#论文后续" class="headerlink" title="论文后续"></a>论文后续</h1><p>后续论文做了一些消融实验证明了每个预训练任务的重要性，对模型进行了总结评估，这里就不再赘述了。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 人工智能 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Transformer </tag>
+            
+            <tag> 知识图谱 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>MLP-多层感知机</title>
       <link href="/posts/40451/"/>
       <url>/posts/40451/</url>
@@ -38,7 +65,7 @@
       
       <categories>
           
-          <category> FPGA </category>
+          <category> Unix &amp; Linux 系统学习 </category>
           
       </categories>
       
@@ -135,12 +162,12 @@
       <link href="/posts/60156/"/>
       <url>/posts/60156/</url>
       
-        <content type="html"><![CDATA[<h1 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h1><p>经常搞 Liunx 的人都知道，文件系统是 Liunx 不可或缺的一部分，难免会遇到需要自己定制一个文件系统的情形，本篇文章就是讲述了基于 ubuntu_base 来定制一个文件系统的方法。</p><h1 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h1><ol><li>如果想要构建的文件系统和构建时所用的平台不一样，则需要创建一个模拟环境，创建也很简单，安装 <code>qemu-user-static</code> 即可。例如<code>apt install qemu-user-static</code>。</li><li>获取 ubuntu_base，直接从官网<a href="https://cdimage.ubuntu.com/ubuntu-base/releases/">下载</a>即可，如果访问异常就挂一个代理，至于版本选择，一般情况选新不选旧，但也要结合你的实际情况。</li></ol><p><img src="下载ubuntu_rootfs.png" alt="ubuntu"></p><h1 id="配置根文件系统"><a href="#配置根文件系统" class="headerlink" title="配置根文件系统"></a>配置根文件系统</h1><p>以 <code>ubuntu-base-24.04.1-base-arm64</code> 为例：</p><ol><li>解压根文件系统： <code>tar -xvf ubuntu-base-24.04.1-base-arm64 -C 目标文件夹</code></li><li>为根文件系统配置网络: <code>cp /etc/resolv.conf  ubuntu-base-24.04.1-base-arm64/etc/resolv.conf</code></li><li><p>更换 apt 的软件源： <code>sudo vim ubuntu-base-24.04.1-base-arm64/etc/apt/source.list</code></p><p> 更换内容需要根据 <strong>ubuntu 版本 + 架构</strong> 共同决定，上网搜 <code>ubuntu 版本 + 架构</code> 更换软件源进行覆盖即可。</p><p> 需要注意的是 ubuntu 24.04 不再通过上述文件控制软件源，而是 <code>/etc/apt/sources.list.d/ubuntu.sources</code>，参考换源<a href="https://blog.csdn.net/qq_37344125/article/details/138841559">见这里</a></p></li><li><p>编写 mount 脚本，这里直接提供一个通用脚本：</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">mnt</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;MOUNTING&quot;</span></span><br><span class="line">    sudo mount -t proc /proc <span class="variable">$&#123;2&#125;</span>proc</span><br><span class="line">    sudo mount -t sysfs /sys <span class="variable">$&#123;2&#125;</span>sys</span><br><span class="line">    sudo mount -o <span class="built_in">bind</span> /dev <span class="variable">$&#123;2&#125;</span>dev</span><br><span class="line">    <span class="comment">#sudo mount -t devpts -o gid=5,mode=620 devpts $&#123;2&#125;dev/pts</span></span><br><span class="line">    sudo mount -o <span class="built_in">bind</span> /dev/pts <span class="variable">$&#123;2&#125;</span>dev/pts</span><br><span class="line">    sudo <span class="built_in">chroot</span> <span class="variable">$&#123;2&#125;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">umnt</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;UNMOUNTING&quot;</span></span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>proc</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>sys</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>dev/pts</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>dev</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$1</span>&quot;</span> == <span class="string">&quot;-m&quot;</span> ] &amp;&amp; [ -n <span class="string">&quot;<span class="variable">$2</span>&quot;</span> ];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        mnt <span class="variable">$1</span> <span class="variable">$2</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="string">&quot;<span class="variable">$1</span>&quot;</span> == <span class="string">&quot;-u&quot;</span> ] &amp;&amp; [ -n <span class="string">&quot;<span class="variable">$2</span>&quot;</span> ];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        umnt <span class="variable">$1</span> <span class="variable">$2</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;Either 1&#x27;st, 2&#x27;nd or both parameters were missing&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;1&#x27;st parameter can be one of these: -m(mount) OR -u(umount)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;2&#x27;nd parameter is the full path of rootfs directory(with tralling &#x27;/&#x27;)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;For example: ch-mount -m /media/sdcard&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> 1st parameter : <span class="variable">$&#123;1&#125;</span></span><br><span class="line">        <span class="built_in">echo</span> 2nd parameter : $[2]</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure> <p> 此脚本目的是为了暂时将构建机所用的文件系统暂时切换到根文件系统，然后就可以像操作正常的文件系统一样为此文件系统安装软件包。</p><p> 用法如下：</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#增加脚本执行权限</span></span><br><span class="line">sudo <span class="built_in">chmod</span> +x mount.sh</span><br><span class="line"><span class="comment">#挂载根文件系统</span></span><br><span class="line">./mount -m ubuntu_rootfs/</span><br><span class="line"><span class="comment">#退出根文件系统</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line"><span class="comment">#卸载根文件系统</span></span><br><span class="line">./mount.sh -u ubuntu_rootfs/</span><br></pre></td></tr></table></figure> </li><li><p>挂载根文件系统，为其安装必要组件 + 按需自己安装</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#更新软件</span></span><br><span class="line">apt update</span><br><span class="line">apt upgrade</span><br><span class="line"><span class="comment">#安装必要工具</span></span><br><span class="line">apt install vim bash-completion net-tools iputils-ping ifupdown ethtool \</span><br><span class="line"> ssh rsync udev htop rsyslog nfs-common language-pack-en-base sudo psmisc </span><br></pre></td></tr></table></figure> </li><li><p>更改 root 密码，<code>passwd root</code> 按照提示输入两次密码即可。</p><p> 如果这里出现了 <code>passwd：Authentication token manipulation error</code> 这样的报错，可以参照<a href="https://blog.csdn.net/zly_ir/article/details/51264874">这里</a>解决。但是不一定能完美解决，如果实在改不了密码，可以使用下一步骤曲线救国：</p></li><li><p>设置自动登录 root 账户，在安装了 <code>udev</code> 后，可以打开 <code>vi /lib/systemd/system/serial-getty\@.service</code>，将 <code>ExecStart</code> 这一行改为 <code>ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM</code>。</p></li><li><p>退出根文件系统，卸载根文件系统。</p></li></ol><h1 id="打包根文件系统"><a href="#打包根文件系统" class="headerlink" title="打包根文件系统"></a>打包根文件系统</h1><ol><li>制作空镜像，在此处指定你最终想要做的根文件系统镜像大小。<code>dd if=/dev/zero of=ubuntu.ext4 bs=1M count=大小</code>。</li><li>将空镜像格式化为 ext4 格式，<code>mkfs.ext4 ubuntu.ext4</code></li><li><p>挂载此镜像，将根文件系统的内容全部复制到镜像中。</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> mnt</span><br><span class="line">sudo mount ubuntu.ext4 ubuntu-base-24.04.1-base-arm64/</span><br><span class="line">sudo <span class="built_in">cp</span> -rfp ubuntu-base-24.04.1-base-arm64/* mnt/</span><br></pre></td></tr></table></figure> </li><li>卸载此镜像 <code>sudo umount mnt</code></li><li>使用 e2fsck 修复文件系统，因为我们是将一个小的文件系统塞入了一个大的镜像中，不修复存储可能会有问题，<code>e2fsck -p -f ubuntu_rootfs.img</code></li><li>如果想要最小化文件系统，就输入<code>resize2fs -M ubuntu.ext4</code>，否则就什么也不用做了。</li></ol><h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>最终，ubuntu.ext4 即为我们需要的根文件系统镜像。</p><p>本文参考了 <a href="https://blog.csdn.net/weixin_46025014/article/details/131682463">构建Ubuntu20.04根文件系统并移植到RK3568</a>，并有一些自己的想法，更多细节可以参考此文。</p>]]></content>
+        <content type="html"><![CDATA[<h1 id="写在开头"><a href="#写在开头" class="headerlink" title="写在开头"></a>写在开头</h1><p>经常搞 Liunx 的人都知道，文件系统是 Liunx 不可或缺的一部分，难免会遇到需要自己定制一个文件系统的情形，本篇文章就是讲述了基于 ubuntu_base 来定制一个文件系统的方法。</p><h1 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h1><ol><li>如果想要构建的文件系统和构建时所用的平台不一样，则需要创建一个模拟环境，创建也很简单，安装 <code>qemu-user-static</code> 即可。例如<code>apt install qemu-user-static</code>。</li><li>获取 ubuntu_base，直接从官网<a href="https://cdimage.ubuntu.com/ubuntu-base/releases/">下载</a>即可，如果访问异常就挂一个代理，至于版本选择，一般情况选新不选旧，但也要结合你的实际情况。</li></ol><p><img src="下载ubuntu_rootfs.png" alt="ubuntu"></p><h1 id="配置根文件系统"><a href="#配置根文件系统" class="headerlink" title="配置根文件系统"></a>配置根文件系统</h1><p>以 <code>ubuntu-base-24.04.1-base-arm64</code> 为例：</p><ol><li>解压根文件系统： <code>tar -xvf ubuntu-base-24.04.1-base-arm64 -C 目标文件夹</code></li><li>为根文件系统配置网络: <code>cp /etc/resolv.conf  ubuntu-base-24.04.1-base-arm64/etc/resolv.conf</code></li><li><p>更换 apt 的软件源： <code>sudo vim ubuntu-base-24.04.1-base-arm64/etc/apt/source.list</code></p><p> 更换内容需要根据 <strong>ubuntu 版本 + 架构</strong> 共同决定，上网搜 <code>ubuntu 版本 + 架构</code> 更换软件源进行覆盖即可。</p><p> 需要注意的是 ubuntu 24.04 不再通过上述文件控制软件源，而是 <code>/etc/apt/sources.list.d/ubuntu.sources</code>，参考换源<a href="https://blog.csdn.net/qq_37344125/article/details/138841559">见这里</a></p></li><li><p>编写 mount 脚本，这里直接提供一个通用脚本：</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">mnt</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;MOUNTING&quot;</span></span><br><span class="line">    sudo mount -t proc /proc <span class="variable">$&#123;2&#125;</span>proc</span><br><span class="line">    sudo mount -t sysfs /sys <span class="variable">$&#123;2&#125;</span>sys</span><br><span class="line">    sudo mount -o <span class="built_in">bind</span> /dev <span class="variable">$&#123;2&#125;</span>dev</span><br><span class="line">    <span class="comment">#sudo mount -t devpts -o gid=5,mode=620 devpts $&#123;2&#125;dev/pts</span></span><br><span class="line">    sudo mount -o <span class="built_in">bind</span> /dev/pts <span class="variable">$&#123;2&#125;</span>dev/pts</span><br><span class="line">    sudo <span class="built_in">chroot</span> <span class="variable">$&#123;2&#125;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">umnt</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;UNMOUNTING&quot;</span></span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>proc</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>sys</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>dev/pts</span><br><span class="line">    sudo umount <span class="variable">$&#123;2&#125;</span>dev</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$1</span>&quot;</span> == <span class="string">&quot;-m&quot;</span> ] &amp;&amp; [ -n <span class="string">&quot;<span class="variable">$2</span>&quot;</span> ];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        mnt <span class="variable">$1</span> <span class="variable">$2</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="string">&quot;<span class="variable">$1</span>&quot;</span> == <span class="string">&quot;-u&quot;</span> ] &amp;&amp; [ -n <span class="string">&quot;<span class="variable">$2</span>&quot;</span> ];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        umnt <span class="variable">$1</span> <span class="variable">$2</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;Either 1&#x27;st, 2&#x27;nd or both parameters were missing&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;1&#x27;st parameter can be one of these: -m(mount) OR -u(umount)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;2&#x27;nd parameter is the full path of rootfs directory(with tralling &#x27;/&#x27;)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;For example: ch-mount -m /media/sdcard&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> 1st parameter : <span class="variable">$&#123;1&#125;</span></span><br><span class="line">        <span class="built_in">echo</span> 2nd parameter : $[2]</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure> <p> 此脚本目的是为了暂时将构建机所用的文件系统暂时切换到根文件系统，然后就可以像操作正常的文件系统一样为此文件系统安装软件包。</p><p> 用法如下：</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#增加脚本执行权限</span></span><br><span class="line">sudo <span class="built_in">chmod</span> +x mount.sh</span><br><span class="line"><span class="comment">#挂载根文件系统</span></span><br><span class="line">./mount -m ubuntu_rootfs/</span><br><span class="line"><span class="comment">#退出根文件系统</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line"><span class="comment">#卸载根文件系统</span></span><br><span class="line">./mount.sh -u ubuntu_rootfs/</span><br></pre></td></tr></table></figure> </li><li><p>挂载根文件系统，为其安装必要组件 + 按需自己安装</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#更新软件</span></span><br><span class="line">apt update</span><br><span class="line">apt upgrade</span><br><span class="line"><span class="comment">#安装必要工具</span></span><br><span class="line">apt install vim bash-completion net-tools iputils-ping ifupdown ethtool \</span><br><span class="line"> ssh rsync udev htop rsyslog nfs-common language-pack-en-base sudo psmisc </span><br></pre></td></tr></table></figure> </li><li><p>更改 root 密码，<code>passwd root</code> 按照提示输入两次密码即可。</p><p> 如果这里出现了 <code>passwd：Authentication token manipulation error</code> 这样的报错，可以参照<a href="https://blog.csdn.net/zly_ir/article/details/51264874">这里</a>解决。但是不一定能完美解决，如果实在改不了密码，可以使用下一步骤曲线救国：</p></li><li><p>设置自动登录 root 账户，在安装了 <code>udev</code> 后，可以打开 <code>vi /lib/systemd/system/serial-getty\@.service</code>，将 <code>ExecStart</code> 这一行改为 <code>ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM</code>。</p></li><li><p>退出根文件系统，卸载根文件系统。</p></li></ol><h1 id="打包根文件系统"><a href="#打包根文件系统" class="headerlink" title="打包根文件系统"></a>打包根文件系统</h1><ol><li>制作空镜像，在此处指定你最终想要做的根文件系统镜像大小。<code>dd if=/dev/zero of=ubuntu.ext4 bs=1M count=大小</code>。</li><li>将空镜像格式化为 ext4 格式，<code>mkfs.ext4 ubuntu.ext4</code></li><li><p>挂载此镜像，将根文件系统的内容全部复制到镜像中。</p> <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> mnt</span><br><span class="line">sudo mount ubuntu.ext4 mnt/</span><br><span class="line">sudo <span class="built_in">cp</span> -rfp ubuntu-base-24.04.1-base-arm64/* mnt/</span><br></pre></td></tr></table></figure> </li><li>卸载此镜像 <code>sudo umount mnt</code></li><li>使用 e2fsck 修复文件系统，因为我们是将一个小的文件系统塞入了一个大的镜像中，不修复存储可能会有问题，<code>e2fsck -p -f ubuntu.ext4</code></li><li>如果想要最小化文件系统，就输入<code>resize2fs -M ubuntu.ext4</code>，否则就什么也不用做了。</li></ol><h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>最终，ubuntu.ext4 即为我们需要的根文件系统镜像。</p><p>本文参考了 <a href="https://blog.csdn.net/weixin_46025014/article/details/131682463">构建Ubuntu20.04根文件系统并移植到RK3568</a>，并有一些自己的想法，更多细节可以参考此文。</p>]]></content>
       
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> Unix &amp; Linux 系统学习 </category>
           
       </categories>
       
@@ -165,7 +192,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> Unix &amp; Linux 系统学习 </category>
           
       </categories>
       
@@ -190,7 +217,7 @@
       
       <categories>
           
-          <category> 嵌入式相关学习 </category>
+          <category> Unix &amp; Linux 系统学习 </category>
           
       </categories>
       
@@ -215,7 +242,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> ARM 相关 </category>
           
       </categories>
       
@@ -224,9 +251,7 @@
             
             <tag> Linux </tag>
             
-            <tag> OS学习 </tag>
-            
-            <tag> 记忆留存 </tag>
+            <tag> ATF </tag>
             
         </tags>
       
@@ -244,7 +269,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> Unix &amp; Linux 系统学习 </category>
           
       </categories>
       
@@ -273,14 +298,14 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> ARM 相关 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> ARM 体系结构 </tag>
+            <tag> GIC </tag>
             
         </tags>
       
@@ -298,14 +323,14 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> ARM 相关 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> ARM 体系结构 </tag>
+            <tag> GIC </tag>
             
         </tags>
       
@@ -323,14 +348,14 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> ARM 相关 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> ARM 体系结构 </tag>
+            <tag> GIC </tag>
             
         </tags>
       
@@ -348,14 +373,14 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> ARM 相关 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> ARM 体系结构 </tag>
+            <tag> GIC </tag>
             
         </tags>
       
@@ -489,31 +514,6 @@
     
     
     <entry>
-      <title>编译总结感想</title>
-      <link href="/posts/6663/"/>
-      <url>/posts/6663/</url>
-      
-        <content type="html"><![CDATA[<p>编译总结</p><h2 id="课程收获"><a href="#课程收获" class="headerlink" title="课程收获"></a>课程收获</h2><p><img src="提交次数.jpg" alt="161"><br>161次提交记录…….在大二的时候久闻编译强度之大，终于在这一学期也是让我真正的亲身体会了一把，但回首这几个月，除了De不出Bug时那绝望的心情，我更多的时候收获的是每一次提交时的自豪与满足。每一次De出Bug、实现功能的成就感。对编译器的理解也是从一开始抓着别人问我该做什么，变成了我知道我该做什么，我写的哪里还有不足等等。这些提升都是实打实的提升。我对编译器的理解也是随着我实践的深入逐渐清晰，原来大一大二时在我眼里十分神秘的编译器也逐渐变得明朗。这种成长的感觉非常棒，足以抵消强度之大的流言。</p><p>而且，我认为大家都说编译强度大，我现在更多的倾向是他们没有合理安排自己的时间所导致的，因为我虽然提交次数很多，但我在一学期中并没有特别明显的感受到编译实验带来的时间上的压力，这是因为我对此在开学就有一定的规划，我听取了学长们的建议，结合自己的实际下定决心从开学开始开发，到国庆就完成了不带优化的编译器的实现。这让我后面的时间极其宽松，我甚至可以放着编译实验一周而去做更为急迫的事情。也因此虽然在最后我的时间也不是很充足，但我也不像很多人一样完全缺乏时间进行优化。让我得以取得了一个较好的竞速成绩——竞速第六。也正因为此，我觉得编译原理这门课也在教导我们要学会时间管理，强度大或许只是我们的时间管理不够到位，导致在学期末没有时间而已。</p><p><img src="基本功能完成.jpg" alt="161"><br>其次我想在编译课程的末尾结合我的编译器谈谈编译的五大过程——词法分析、语法分析、语义分析、中间代码生成及优化、目标代码生成及优化。</p><h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>词法分析建立了编译器与输入文件之间的桥梁，将其转换为了编译器能够识别的单词。在我的实现中，我采用正则表达式去匹配单词。完成了这一部分的工作。</p><h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>利用前面生成的单词作为输入，结合文法生成语法树。我实现的是理论所讲的递归下降分析法，对每个非终结符都建立一个类并实现解析方法，这些非终结符之间互相调用完成语法树建立。在我的实现中，我不仅对每个非终结符建立了类，为了实现优雅，对于一些较复杂的产生式，我也生成了一些新的非终结符对其进行处理：<br>并对这一阶段会产生的语义错误进行了处理。</p><h3 id="语义分析"><a href="#语义分析" class="headerlink" title="语义分析"></a>语义分析</h3><p>在这里我单独进行了符号表的建立，而不是边建立符号表边生成中间代码，我这么做是为了中间代码生成的顺畅进行，让其可以不考虑错误的执行。同样的，我从递归下降中学到了递归相互调用的思路，调用每个非终结符下的RunSymbolBuilder来建立符号表管理并找到语义错误。</p><h3 id="中间代码生成及优化"><a href="#中间代码生成及优化" class="headerlink" title="中间代码生成及优化"></a>中间代码生成及优化</h3><p>生成我同样在语法树上进行，对每一个非终结符都实现了中间代码生成的方法。也是一种递归互相调用。我没有使用LLVM作为我的中间表达，我的中间表达设计参考了Yu-Ge编译器，使用了更接近Mips目标代码的中间表达，也是为了生成目标代码时的方便。这里我收获最大的是优化部分，如果说前面的设计包括后续的目标代码生成还有一点固定的思路在里面，那么代码优化就是天高任鸟飞的局面，只要有了点优化的想象力，都可以通过代码实现。我是非常喜欢这种事情的，而且在优化的过程中我也参考了很多前人的优化方法，阅读了许多英文论文，虽然读起来吃力，但我确实惊叹于他们的思路之巧妙，也给了我很多优化的启示。最终我完成了如下的优化：</p><p>更多的细节由于和优化文档重合，详情可以见我的优化文档。</p><h3 id="目标代码生成及优化"><a href="#目标代码生成及优化" class="headerlink" title="目标代码生成及优化"></a>目标代码生成及优化</h3><p>这里就是根据目标平台的指令集进行指令选择，将自己的中间代码转换为目标平台可以执行的汇编程序。在我的实现中，我的目标平台是Mips，对Mips指令进行了选择和优化，并做了乘除和图着色、OPT分配优化。</p><p>除此之外，我继续发扬了我在CO、OO的习惯，继续写了对编译器进行自动化测试的程序。实现了自动用gcc编译运行文件得到结果与我的编译器运行结果进行对比的功能。搜集了今年和去年两年的测试库一共141例作为了测试程序，由于去年的测试库为while语句，我还对我的测试程序集成了自动处理while为for的功能：</p><p><img src="自动处理.png" alt="自动处理"></p><p>这个测试程序帮助了我很多，大大节约了我测试的时间并极大的提高了我测试的强度。</p><p>总而言之，通过实验实打实的加深了我对理论的理解，感谢编译原理这门课提供的机会。</p>]]></content>
-      
-      
-      <categories>
-          
-          <category> 北航编译原理 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 编译总结 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Mips-编译优化总结</title>
       <link href="/posts/31035/"/>
       <url>/posts/31035/</url>
@@ -523,7 +523,7 @@
       
       <categories>
           
-          <category> 北航编译原理 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -548,7 +548,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> ARM 相关 </category>
           
       </categories>
       
@@ -625,7 +625,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> 编程语言学习 </category>
           
       </categories>
       
@@ -652,7 +652,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> 编程语言学习 </category>
           
       </categories>
       
@@ -679,7 +679,7 @@
       
       <categories>
           
-          <category> Hypervisor 学习 </category>
+          <category> 编程语言学习 </category>
           
       </categories>
       
@@ -706,7 +706,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -733,7 +733,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -751,6 +751,31 @@
     
     
     <entry>
+      <title>编译总结感想</title>
+      <link href="/posts/6663/"/>
+      <url>/posts/6663/</url>
+      
+        <content type="html"><![CDATA[<p>编译总结</p><h2 id="课程收获"><a href="#课程收获" class="headerlink" title="课程收获"></a>课程收获</h2><p><img src="提交次数.jpg" alt="161"><br>161次提交记录…….在大二的时候久闻编译强度之大，终于在这一学期也是让我真正的亲身体会了一把，但回首这几个月，除了De不出Bug时那绝望的心情，我更多的时候收获的是每一次提交时的自豪与满足。每一次De出Bug、实现功能的成就感。对编译器的理解也是从一开始抓着别人问我该做什么，变成了我知道我该做什么，我写的哪里还有不足等等。这些提升都是实打实的提升。我对编译器的理解也是随着我实践的深入逐渐清晰，原来大一大二时在我眼里十分神秘的编译器也逐渐变得明朗。这种成长的感觉非常棒，足以抵消强度之大的流言。</p><p>而且，我认为大家都说编译强度大，我现在更多的倾向是他们没有合理安排自己的时间所导致的，因为我虽然提交次数很多，但我在一学期中并没有特别明显的感受到编译实验带来的时间上的压力，这是因为我对此在开学就有一定的规划，我听取了学长们的建议，结合自己的实际下定决心从开学开始开发，到国庆就完成了不带优化的编译器的实现。这让我后面的时间极其宽松，我甚至可以放着编译实验一周而去做更为急迫的事情。也因此虽然在最后我的时间也不是很充足，但我也不像很多人一样完全缺乏时间进行优化。让我得以取得了一个较好的竞速成绩——竞速第六。也正因为此，我觉得编译原理这门课也在教导我们要学会时间管理，强度大或许只是我们的时间管理不够到位，导致在学期末没有时间而已。</p><p><img src="基本功能完成.jpg" alt="161"><br>其次我想在编译课程的末尾结合我的编译器谈谈编译的五大过程——词法分析、语法分析、语义分析、中间代码生成及优化、目标代码生成及优化。</p><h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>词法分析建立了编译器与输入文件之间的桥梁，将其转换为了编译器能够识别的单词。在我的实现中，我采用正则表达式去匹配单词。完成了这一部分的工作。</p><h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>利用前面生成的单词作为输入，结合文法生成语法树。我实现的是理论所讲的递归下降分析法，对每个非终结符都建立一个类并实现解析方法，这些非终结符之间互相调用完成语法树建立。在我的实现中，我不仅对每个非终结符建立了类，为了实现优雅，对于一些较复杂的产生式，我也生成了一些新的非终结符对其进行处理：<br>并对这一阶段会产生的语义错误进行了处理。</p><h3 id="语义分析"><a href="#语义分析" class="headerlink" title="语义分析"></a>语义分析</h3><p>在这里我单独进行了符号表的建立，而不是边建立符号表边生成中间代码，我这么做是为了中间代码生成的顺畅进行，让其可以不考虑错误的执行。同样的，我从递归下降中学到了递归相互调用的思路，调用每个非终结符下的RunSymbolBuilder来建立符号表管理并找到语义错误。</p><h3 id="中间代码生成及优化"><a href="#中间代码生成及优化" class="headerlink" title="中间代码生成及优化"></a>中间代码生成及优化</h3><p>生成我同样在语法树上进行，对每一个非终结符都实现了中间代码生成的方法。也是一种递归互相调用。我没有使用LLVM作为我的中间表达，我的中间表达设计参考了Yu-Ge编译器，使用了更接近Mips目标代码的中间表达，也是为了生成目标代码时的方便。这里我收获最大的是优化部分，如果说前面的设计包括后续的目标代码生成还有一点固定的思路在里面，那么代码优化就是天高任鸟飞的局面，只要有了点优化的想象力，都可以通过代码实现。我是非常喜欢这种事情的，而且在优化的过程中我也参考了很多前人的优化方法，阅读了许多英文论文，虽然读起来吃力，但我确实惊叹于他们的思路之巧妙，也给了我很多优化的启示。最终我完成了如下的优化：</p><p>更多的细节由于和优化文档重合，详情可以见我的优化文档。</p><h3 id="目标代码生成及优化"><a href="#目标代码生成及优化" class="headerlink" title="目标代码生成及优化"></a>目标代码生成及优化</h3><p>这里就是根据目标平台的指令集进行指令选择，将自己的中间代码转换为目标平台可以执行的汇编程序。在我的实现中，我的目标平台是Mips，对Mips指令进行了选择和优化，并做了乘除和图着色、OPT分配优化。</p><p>除此之外，我继续发扬了我在CO、OO的习惯，继续写了对编译器进行自动化测试的程序。实现了自动用gcc编译运行文件得到结果与我的编译器运行结果进行对比的功能。搜集了今年和去年两年的测试库一共141例作为了测试程序，由于去年的测试库为while语句，我还对我的测试程序集成了自动处理while为for的功能：</p><p><img src="自动处理.png" alt="自动处理"></p><p>这个测试程序帮助了我很多，大大节约了我测试的时间并极大的提高了我测试的强度。</p><p>总而言之，通过实验实打实的加深了我对理论的理解，感谢编译原理这门课提供的机会。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 北航课程体系 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 编译总结 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>操作系统外设管理复习</title>
       <link href="/posts/42377/"/>
       <url>/posts/42377/</url>
@@ -760,7 +785,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -787,7 +812,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -814,7 +839,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -841,7 +866,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -868,7 +893,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -895,7 +920,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -922,7 +947,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -974,7 +999,7 @@
       
       <categories>
           
-          <category> 北航信号处理与信息推断 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -999,12 +1024,14 @@
       
       <categories>
           
-          <category> 龙芯 NSCSCC </category>
+          <category> FPGA </category>
           
       </categories>
       
       
         <tags>
+            
+            <tag> 计算机组成 </tag>
             
             <tag> 分支预测 </tag>
             
@@ -1105,7 +1132,7 @@
       
       <categories>
           
-          <category> 龙芯 NSCSCC </category>
+          <category> FPGA </category>
           
       </categories>
       
@@ -1132,7 +1159,7 @@
       
       <categories>
           
-          <category> 北航操作系统 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
@@ -1152,7 +1179,7 @@
     
     
     <entry>
-      <title>CPU扩展设计--AXI总线接口实现</title>
+      <title>CPU扩展设计——AXI总线接口实现</title>
       <link href="/posts/14266/"/>
       <url>/posts/14266/</url>
       
@@ -1161,7 +1188,7 @@
       
       <categories>
           
-          <category> 龙芯 NSCSCC </category>
+          <category> FPGA </category>
           
       </categories>
       
@@ -1171,6 +1198,8 @@
             <tag> AXI总线 </tag>
             
             <tag> CPU接口 </tag>
+            
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1348,14 +1377,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P8 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1373,14 +1402,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P7 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1398,14 +1427,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P7 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1423,16 +1452,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P6 </tag>
-            
-            <tag> 北航计算机组成-P5 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1450,14 +1477,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P6 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1475,14 +1502,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P6 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1500,14 +1527,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P5 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1525,14 +1552,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P5 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1550,14 +1577,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P4 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1575,14 +1602,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P4 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1600,14 +1627,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P3 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1625,14 +1652,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P3 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1650,16 +1677,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P0 </tag>
-            
-            <tag> 北航计算机组成-P1 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1677,18 +1702,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P0 </tag>
-            
-            <tag> 北航计算机组成-P1 </tag>
-            
-            <tag> 北航计算机组成-P2 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1706,14 +1727,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成-P0 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1731,14 +1752,14 @@
       
       <categories>
           
-          <category> 北航计算机组成 </category>
+          <category> 北航课程体系 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 北航计算机组成杂谈 </tag>
+            <tag> 计算机组成 </tag>
             
         </tags>
       
@@ -1761,33 +1782,11 @@
     
     
     <entry>
-      <title>archives</title>
-      <link href="/archives/index.html"/>
-      <url>/archives/index.html</url>
+      <title>link</title>
+      <link href="/link/index.html"/>
+      <url>/link/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>关于</title>
-      <link href="/about/index.html"/>
-      <url>/about/index.html</url>
-      
-        <content type="html"><![CDATA[<ul><li>2021-2025 北京航空航天大学<br>计算机学院 计算机科学与技术</li><li>2025-2028 北京大学<br>计算机学院 计算机科学与技术 OS 方向<br>感恩每一次相遇！</li></ul>]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>书籍</title>
-      <link href="/books/index.html"/>
-      <url>/books/index.html</url>
-      
-        <content type="html"><![CDATA[<div class="fj-gallery"><p><img src="https://s1.ax1x.com/2023/01/28/pSanJat.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaurlD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauyOH.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanoZR.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanOzD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaupdI.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauQYV.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaulWT.png" alt=""></p>          </div>]]></content>
       
     </entry>
     
@@ -1805,9 +1804,31 @@
     
     
     <entry>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <url>/about/index.html</url>
+      
+        <content type="html"><![CDATA[<ul><li>2021-2025 北京航空航天大学 本科<br>计算机学院 计算机科学与技术</li><li>2025-2028 北京大学 硕士<br>计算机学院 计算机科学与技术<br>虚拟化 / 具身智能 OS 方向<br>感恩每一次相遇！</li></ul>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>分类</title>
       <link href="/categories/index.html"/>
       <url>/categories/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>archives</title>
+      <link href="/archives/index.html"/>
+      <url>/archives/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -1827,11 +1848,11 @@
     
     
     <entry>
-      <title>link</title>
-      <link href="/link/index.html"/>
-      <url>/link/index.html</url>
+      <title>书籍</title>
+      <link href="/books/index.html"/>
+      <url>/books/index.html</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[<div class="fj-gallery"><p><img src="https://s1.ax1x.com/2023/01/28/pSanJat.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaurlD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauyOH.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanoZR.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSanOzD.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaupdI.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSauQYV.jpg" alt=""><br><img src="https://s1.ax1x.com/2023/01/28/pSaulWT.png" alt=""></p>          </div>]]></content>
       
     </entry>
     
